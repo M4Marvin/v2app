@@ -13,6 +13,7 @@ function SettingsLayout() {
   const links = [
     { to: "/settings/preferences", label: "Preferences" },
     { to: "/settings/profile", label: "Profile" },
+    { to: "/onboarding", label: "Onboarding" },
     ...(isAdmin
       ? [
           { to: "/settings/providers", label: "Providers" },

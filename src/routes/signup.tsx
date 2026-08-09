@@ -10,6 +10,8 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/common/ErrorBanner";
 import { authClient } from "@/lib/auth-client";
+import { getOnboardingStatus } from "@/server/fns/onboarding";
+import { postAuthTarget } from "@/features/onboarding/onboarding-gate";
 
 const signupSchema = z
   .object({
@@ -50,7 +52,8 @@ function SignupPage() {
         toast.error(result.error.message || "Sign up failed");
         return;
       }
-      await navigate({ to: "/chat" });
+      const status = await getOnboardingStatus();
+      await navigate({ to: postAuthTarget(status) });
     },
   });
 

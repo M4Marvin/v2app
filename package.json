@@ -23,7 +23,8 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "format": "oxfmt src",
-    "lint": "oxlint src"
+    "lint": "oxlint src",
+    "check:docs": "node scripts/verify-user-docs.mjs"
   },
   "dependencies": {
     "@adobe/css-tools": "^4.5.0",
@@ -31,7 +32,7 @@
     "@effect/platform": "^0.97.0",
     "@faker-js/faker": "^10.5.0",
     "@phosphor-icons/react": "^2.1.10",
-    "@shadcn/react": "^0.1.0",
+    "@shadcn/react": "^0.3.0",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/ai": "0.35.0",
     "@tanstack/ai-anthropic": "0.15.5",

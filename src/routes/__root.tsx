@@ -27,6 +27,8 @@ import appCss from "@/styles.css?url";
 import type { QueryClient } from "@tanstack/react-query";
 import { RichTextSettingsProvider } from "@/lib/richtext-settings";
 import { getSession } from "@/lib/auth.functions";
+import { getOnboardingStatus } from "@/server/fns/onboarding";
+import { redirectTargetForPath } from "@/features/onboarding/onboarding-gate";
 import type { User } from "@/db/schema";
 
 interface MyRouterContext {
@@ -80,6 +82,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     const session = await getSession();
     if (!session) {
       throw redirect({ to: "/signin" });
+    }
+    const status = await getOnboardingStatus();
+    const target = redirectTargetForPath(location.pathname, status);
+    if (target) {
+      throw redirect({ to: target });
     }
     return { user: session.user as User };
   },
@@ -182,7 +189,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { queryClient, user } = Route.useRouteContext();
   const location = useLocation();
   const hideGlobalHeader =
-    /^\/chat\//.test(location.pathname) || /^\/c\/(?!new$)[^/]+$/.test(location.pathname);
+    /^\/chat\//.test(location.pathname) ||
+    /^\/c\/(?!new$)[^/]+$/.test(location.pathname) ||
+    location.pathname === "/onboarding";
   const isAuthed = Boolean(user);
   return (
     <html lang="en" suppressHydrationWarning>
@@ -209,7 +218,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 </RichTextSettingsProvider>
               </div>
               {isAuthed && !hideGlobalHeader && <MobileTabBar />}
-              {isAuthed && <CommandMenu isAdmin={user?.role === "admin"} />}
+              {isAuthed && !hideGlobalHeader && <CommandMenu isAdmin={user?.role === "admin"} />}
               <Toaster />
             </ErrorBoundary>
             <TanStackDevtools

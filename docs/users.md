@@ -1,5 +1,7 @@
 # User Types & Permissions
 
+> End-user documentation now lives in `docs/user/` (written for a non-technical, local single user). This page covers the multi-user role model: admin vs demo accounts.
+
 There are two user roles: **admin** and **user** (demo users).
 
 | Capability | Admin | Demo users |

@@ -10,6 +10,7 @@ RUN pnpm run build
 FROM node:22-slim
 WORKDIR /app
 COPY --from=build /app/.output ./.output
+COPY --from=build /app/drizzle ./drizzle
 ENV DATABASE_URL=/app/data/local.db
 ENV PORT=3000
 EXPOSE 3000

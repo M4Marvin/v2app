@@ -10,6 +10,8 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/common/ErrorBanner";
 import { authClient } from "@/lib/auth-client";
+import { getOnboardingStatus } from "@/server/fns/onboarding";
+import { postAuthTarget } from "@/features/onboarding/onboarding-gate";
 
 const signinSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -39,7 +41,8 @@ function SigninPage() {
         toast.error(result.error.message || "Sign in failed");
         return;
       }
-      await navigate({ to: "/chat" });
+      const status = await getOnboardingStatus();
+      await navigate({ to: postAuthTarget(status) });
     },
   });
 

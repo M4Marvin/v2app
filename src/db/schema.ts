@@ -388,6 +388,7 @@ export const userSettings = sqliteTable("user_settings", {
   postHistoryInstructions: text("post_history_instructions"),
   impersonationPrompt: text("impersonation_prompt"),
   imagePromptExample: text("image_prompt_example"),
+  onboardingCompletedAt: integer("onboarding_completed_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),

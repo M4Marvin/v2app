@@ -1,0 +1,1 @@
+ALTER TABLE `user_settings` ADD `onboarding_completed_at` integer;

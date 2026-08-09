@@ -100,7 +100,14 @@ Import with `@/*` (not `#/*`). st-core internal imports use `.js` extensions.
 
 | Doc | What it covers |
 |---|---|
-| `docs/users.md` | Admin vs user roles, permissions, CLI admin creation |
+| `docs/user/index.md` | End-user docs (non-technical, local single-user): overview & core concepts |
+| `docs/user/getting-started.md` | End-user onboarding: install → admin account → provider → characters → first chat |
+| `docs/user/chatting.md` | End-user chat guide: swipe, branch, edit, delete, impersonate, continue, shortcuts |
+| `docs/user/characters.md` | End-user character guide: library, import, detail, edit |
+| `docs/user/lorebooks.md` | End-user lorebook guide (activation is global, not per-chat) |
+| `docs/user/personas-scenes-presets.md` | End-user personas, scenes, presets, display options |
+| `docs/user/troubleshooting.md` | End-user FAQ for common local problems |
+| `docs/users.md` | Admin vs user roles, permissions, CLI admin creation (multi-user model) |
 | `docs/markdown.md` | Full rendering pipeline (showdown, DOMPurify, CSS scoping, morphdom streaming) |
 
 ## Commands

@@ -222,4 +222,26 @@ describe("userSettings repo", () => {
     const row = getUserSettings(userId, db);
     expect(row!.imagePromptExample).toBe("Stable");
   });
+
+  // ── onboardingCompletedAt ──
+
+  it("stores and retrieves onboardingCompletedAt on first upsert", () => {
+    const at = new Date("2026-08-09T12:00:00Z");
+    const row = upsertUserSettings(userId, { onboardingCompletedAt: at }, db);
+    expect(row.onboardingCompletedAt?.getTime()).toBe(at.getTime());
+    const reread = getUserSettings(userId, db);
+    expect(reread!.onboardingCompletedAt?.getTime()).toBe(at.getTime());
+  });
+
+  it("leaves onboardingCompletedAt untouched when the patch omits it", () => {
+    upsertUserSettings(userId, { onboardingCompletedAt: new Date("2026-08-09T12:00:00Z") }, db);
+    upsertUserSettings(userId, { systemPrompt: "Unrelated" }, db);
+    const row = getUserSettings(userId, db);
+    expect(row!.onboardingCompletedAt?.getTime()).toBe(new Date("2026-08-09T12:00:00Z").getTime());
+  });
+
+  it("is null by default for a fresh user", () => {
+    const row = upsertUserSettings(userId, { defaultProviderId: "prov-1" }, db);
+    expect(row.onboardingCompletedAt).toBeNull();
+  });
 });

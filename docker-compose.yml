@@ -1,0 +1,16 @@
+services:
+  charon:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: /app/data/local.db
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-a-real-deployment}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-a-real-deployment}
+      APP_URL: http://localhost:3000
+    volumes:
+      - charon-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  charon-data:

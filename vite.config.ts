@@ -38,7 +38,13 @@ const config = defineConfig({
       },
     },
     nitro(),
-    tanstackStart(),
+    tanstackStart({
+      router: {
+        // Colocated route tests (e.g. characters/new.test.tsx) would otherwise be
+        // picked up as route candidates and warned about on every build.
+        routeFileIgnorePattern: '\\.test\\.',
+      },
+    }),
     viteReact(),
   ],
 })

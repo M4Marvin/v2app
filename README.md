@@ -26,7 +26,9 @@ Charon is a self-hosted web app for roleplaying with AI characters. Import chara
 docker compose up -d
 ```
 
-Open http://localhost:3000. Data persists in a Docker volume.
+Open http://localhost:3000. Data persists in a Docker volume (`charon-data`).
+Set `BETTER_AUTH_SECRET` and `ENCRYPTION_KEY` in your environment (or a `.env`
+file next to `docker-compose.yml`) — see below for generating them.
 
 ### Option B: pnpm
 
@@ -47,14 +49,17 @@ openssl rand -hex 64  # BETTER_AUTH_SECRET
 openssl rand -hex 32  # ENCRYPTION_KEY
 ```
 
+Migrations run automatically on first start — no manual `db:migrate` needed.
+
 ---
 
 ## First-time setup
 
 1. Open http://localhost:3000 and **Sign up** — pick a username and password.
-2. Go to **Settings** → **+ Add provider**, enter your API endpoint, key, and default model.
-3. Go to **Characters** → **Import** and upload one or more `.png` character cards.
-4. Click **+ New Chat**, pick a character, and start typing.
+2. You'll land in the guided **onboarding wizard**, which takes you through the
+   rest: make your account the admin, connect an AI provider, and get a
+   character.
+3. Click **Start chatting** and you're in — pick a character and type.
 
 Characters not included. Grab some from [Chub](https://chub.ai) or copy `.png` files from a SillyTavern `public/characters/` folder.
 
@@ -62,12 +67,15 @@ Characters not included. Grab some from [Chub](https://chub.ai) or copy `.png` f
 
 | Action | How |
 |---|---|
-| **Send** | Type in the composer, press Enter |
-| **Swipe** (regenerate) | Click ← / → on an assistant message, or Ctrl+← / Ctrl+→ |
-| **Edit** | Click the ✏️ icon, edit, click ✓ |
-| **Impersonate** | Ctrl+Shift+Enter (write as your persona) |
-| **Continue** | Ctrl+Enter (extend assistant's last message) |
+| **Send** | Type in the composer, press Enter (Enter also stops while the AI is typing) |
+| **New line** | Shift+Enter |
+| **Swipe** (see alternate replies) | Click the ← / → buttons under an AI message |
+| **Regenerate** | Click the circular-arrow button on the last AI message |
+| **Edit** | Click the ✏️ icon, edit, click ✓ (or Ctrl/Cmd+Enter; Esc cancels) |
+| **Impersonate** | Click the wand icon in the composer, review the draft, press Enter |
+| **Continue** | Leave the input empty and press Enter |
 | **Delete branch** | Trash icon on any message |
+| **Command menu** | Ctrl+K |
 
 ---
 
