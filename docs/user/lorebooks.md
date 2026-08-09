@@ -27,6 +27,8 @@ Imported books start **disabled**. Turn them on with the switch.
 
 After importing, a toast reports the result: `Imported "Name" · N entries · M skipped`. Some entries in the file may not be importable. That is normal. The count tells you how many entries came through and how many were skipped.
 
+Importing a character card with an embedded lorebook creates a standalone book automatically, disabled by default. Turn it on with the switch like any other book.
+
 ## Work with entries
 
 Open a book to see its entries. You can search them by text. You can filter the list with **All**, **On**, or **Off**. Add new ones with **New Entry**.

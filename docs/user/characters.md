@@ -26,6 +26,8 @@ If the card fails validation, Charon lists what's wrong so you can fix the file 
 
 4. Click **Import**. A toast says Imported "{name}" and you land on the character's page.
 
+When a card comes from Chub, the imported character's name is derived from the Chub page slug instead of the card's sometimes-generic internal name. If the card carries an embedded lorebook, Charon also creates a standalone copy in the Lorebooks library, disabled by default, named after the book (or "{Character} [embedded]" when it has no name). Re-importing the same card does not create a duplicate.
+
 ## The character page
 
 The detail page opens with the portrait, name, creator, tags, and stats: chat count, turns, and last updated date. Click **Start Chat** to begin a new conversation. A **Continue chat** list shows your recent chats with this character, up to five, so you can pick up where you left off.
