@@ -53,7 +53,7 @@ type RawCardData = Record<string, unknown> & {
 const VALID_POSITIONS = new Set(["before_char", "after_char"]);
 
 function normalizeBookEntry(entry: RawCardEntry): RawCardEntry | null {
-  if (!Array.isArray(entry.keys) || entry.keys.length === 0) return null;
+  if (!Array.isArray(entry.keys)) return null;
   if (typeof entry.content !== "string" || entry.content.length === 0) return null;
 
   const out: RawCardEntry = { ...entry };

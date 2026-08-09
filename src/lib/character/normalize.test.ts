@@ -109,28 +109,64 @@ describe("normalizeCardData", () => {
     expect("character_book" in data).toBe(false);
   });
 
-  it("drops character_book entries with empty keys or empty content", () => {
+  it("still drops entries with empty content", () => {
+    const card = makeValidCard();
+    (card.data as Record<string, unknown>).character_book = {
+      extensions: {},
+      entries: [{ keys: ["x"], content: "" }],
+    };
+
+    const out = normalizeCardData(card) as Record<string, unknown>;
+    const data = out.data as Record<string, unknown>;
+    // The content guard drops the empty-content entry; with no surviving
+    // entries the whole book is removed by normalizeCharacterBook.
+    const book = data.character_book as { entries: unknown[] } | undefined;
+    expect(book?.entries ?? []).toHaveLength(0);
+  });
+
+  it("preserves character_book entries with empty keys but non-empty content", () => {
     const card = makeValidCard();
     (card.data as Record<string, unknown>).character_book = {
       extensions: {},
       entries: [
-        { keys: ["valid"], content: "ok" },
-        { keys: [], content: "no keys" },
+        { keys: [], content: "ok" },
         { keys: ["no-content"], content: "" },
       ],
     };
 
     const out = normalizeCardData(card) as Record<string, unknown>;
     const data = out.data as Record<string, unknown>;
-    const book = data.character_book as { entries: unknown[] };
+    const book = data.character_book as { entries: Array<{ keys: unknown[] }> };
     expect(book.entries).toHaveLength(1);
+    expect(book.entries[0].keys).toEqual([]);
+  });
+
+  it("preserves Yume-style lorebook entries with empty keys arrays", () => {
+    const card = makeValidCard();
+    (card.data as Record<string, unknown>).character_book = {
+      extensions: {},
+      entries: [
+        { keys: [], content: "A long lore block" },
+        { keys: [], content: "Another block" },
+      ],
+    };
+
+    const out = normalizeCardData(card) as Record<string, unknown>;
+    const data = out.data as Record<string, unknown>;
+    const book = data.character_book as {
+      entries: Array<{ keys: unknown[]; content: string }>;
+    };
+    expect(book.entries).toHaveLength(2);
+    expect(book.entries[0].keys).toEqual([]);
+    expect(book.entries[1].keys).toEqual([]);
+    expect(book.entries[1].content).toBe("Another block");
   });
 
   it("removes character_book entirely if all entries are dropped", () => {
     const card = makeValidCard();
     (card.data as Record<string, unknown>).character_book = {
       extensions: {},
-      entries: [{ keys: [], content: "" }],
+      entries: [{ keys: ["x"], content: "" }],
     };
 
     const out = normalizeCardData(card) as Record<string, unknown>;
@@ -346,5 +382,21 @@ describe("normalizeV3ToV2", () => {
     const ext = outData.extensions as Record<string, unknown>;
     expect(ext.talkativeness).toBe(0.7);
     expect((ext._v3 as Record<string, unknown>).nickname).toBe("Nicky");
+  });
+
+  it("preserves V3 character_book entries with empty keys through the full pipeline", () => {
+    const card = makeValidV3Card();
+    (card.data as Record<string, unknown>).character_book = {
+      extensions: {},
+      entries: [{ keys: [], content: "V3 lore" }],
+    };
+
+    const projected = normalizeV3ToV2(card);
+    const normalized = normalizeCardData(projected);
+    const data = (normalized as Record<string, unknown>).data as Record<string, unknown>;
+    const book = data.character_book as { entries: Array<{ keys: unknown[] }> };
+    expect(book.entries).toHaveLength(1);
+    expect(book.entries[0].keys).toEqual([]);
+    expect(validateCharacterCardV3(normalized).ok).toBe(true);
   });
 });
