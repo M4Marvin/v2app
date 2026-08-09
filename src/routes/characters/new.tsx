@@ -87,7 +87,15 @@ export function NewCharacterPage() {
     if (!previewB64) return;
     const res = await importMutation.mutateAsync({ pngBase64: previewB64 });
     if (res.ok) {
-      toast.success(`Imported ${res.character.name}`);
+      const parts = [`Imported "${res.character.name}"`];
+      if (res.lorebook) {
+        parts.push(
+          `lorebook "${res.lorebook.name}" · ${res.lorebook.entriesInserted} ${
+            res.lorebook.entriesInserted === 1 ? "entry" : "entries"
+          }`,
+        );
+      }
+      toast.success(parts.join(" · "));
       void navigate({ to: "/characters/$id", params: { id: res.character.id } });
     } else {
       if (res.error.kind === "validation") {

@@ -6,15 +6,20 @@ import type { ImportError, PreviewResult } from "@/server/fns/characters";
 
 // vi.hoisted is required: vitest hoists vi.mock factories above top-level const
 // declarations, so a factory referencing a plain const hits a TDZ at import time.
-const { mockFileToBase64, mockPreviewCharacter } = vi.hoisted(() => ({
-  mockFileToBase64: vi.fn(),
-  mockPreviewCharacter: vi.fn(),
-}));
+const { mockFileToBase64, mockPreviewCharacter, mockToastSuccess, mockImportCharacter } =
+  vi.hoisted(() => ({
+    mockFileToBase64: vi.fn(),
+    mockPreviewCharacter: vi.fn(),
+    mockToastSuccess: vi.fn(),
+    mockImportCharacter: vi.fn(),
+  }));
+
+vi.mock("sonner", () => ({ toast: { success: mockToastSuccess } }));
 
 vi.mock("@/hooks/useCharacters", () => ({
   fileToBase64: mockFileToBase64,
   // Kills the QueryClientProvider dependency AND the server-fn import chain in one shot.
-  useImportCharacter: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useImportCharacter: () => ({ isPending: false, mutateAsync: mockImportCharacter }),
 }));
 
 vi.mock("@/server/fns/characters", () => ({
@@ -117,5 +122,38 @@ describe("NewCharacterPage import loading state", () => {
       name: /choose a png character card/i,
     }) as HTMLButtonElement;
     expect(card.disabled).toBe(false);
+  });
+
+  it("shows the lorebook name in the success toast", async () => {
+    let resolvePreview!: (v: PreviewResponse) => void;
+    mockPreviewCharacter.mockReturnValue(
+      new Promise<PreviewResponse>((resolve) => {
+        resolvePreview = resolve;
+      }),
+    );
+    // handleImport guards on `previewB64` being truthy (new.tsx:87), so the
+    // file mock must resolve to something for the import path to run.
+    mockFileToBase64.mockResolvedValue("fake-png-base64");
+    mockImportCharacter.mockResolvedValue({
+      ok: true,
+      character: { id: "c1", name: "Emme Freehold Your Pet Mom", imagePath: null },
+      lorebook: { id: "lb1", name: "Yume", entriesInserted: 8, entriesSkipped: 0 },
+    });
+
+    render(<NewCharacterPage />);
+    fireEvent.change(screen.getByLabelText("Choose a PNG character card"), {
+      target: { files: [makePngFile()] },
+    });
+    await act(async () => {});
+    await act(async () => {
+      resolvePreview({ ok: true, data: minimalOkPreview });
+    });
+    await act(async () => {});
+
+    fireEvent.click(screen.getByRole("button", { name: /^import$/i }));
+    await act(async () => {});
+
+    expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining("Yume"));
+    expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining("8"));
   });
 });
