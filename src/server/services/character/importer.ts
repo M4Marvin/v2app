@@ -5,11 +5,18 @@ import {
   listCharacters as repoList,
 } from "@/db/repositories/characters";
 import {
+  createLorebook as repoCreateLorebook,
+  createEntry as repoCreateLoreEntry,
+  listLorebooks as repoListLorebooks,
+} from "@/db/repositories/lorebooks";
+import {
   parseCharacterCard,
   validateCharacterCard,
   validateCharacterCardV3,
 } from "@/lib/st-core/character";
 import { normalizeCardData, normalizeV3ToV2 } from "@/lib/character/normalize";
+import { deriveDisplayName } from "@/lib/character/chub-name";
+import { convertCharacterBookToStandalone } from "@/lib/lorebook/embedded-book";
 import type { CharacterDataV2 } from "@/lib/st-core/character";
 import {
   ensureUploadsDirs,
@@ -24,8 +31,19 @@ export type ImportError =
   | { kind: "validation"; errors: { field: string; message: string }[] }
   | { kind: "save_failed"; message: string };
 
+export type ImportedLorebook = {
+  id: string;
+  name: string;
+  entriesInserted: number;
+  entriesSkipped: number;
+};
+
 export type ImportResult =
-  | { ok: true; character: { id: string; name: string; imagePath: string | null } }
+  | {
+      ok: true;
+      character: { id: string; name: string; imagePath: string | null };
+      lorebook?: ImportedLorebook | null;
+    }
   | { ok: false; error: ImportError };
 
 export type ParsedCard = {
@@ -123,15 +141,14 @@ export function previewCharacterCard(
 
   const descriptionExcerpt = (cardData.description || "").slice(0, 280);
 
-  const duplicate = repoList(userId, db).find(
-    (c) => c.name.toLowerCase() === cardData.name.toLowerCase(),
-  );
+  const name = deriveDisplayName(cardData);
+  const duplicate = repoList(userId, db).find((c) => c.name.toLowerCase() === name.toLowerCase());
 
   return {
     ok: true,
     data: {
       preview: {
-        name: cardData.name,
+        name,
         creator: cardData.creator ?? "",
         descriptionExcerpt,
         tags: cardData.tags ?? [],
@@ -149,11 +166,14 @@ export function previewCharacterCard(
 export async function importCharacterCard(
   pngBase64: string,
   userId: string,
+  db?: DB,
 ): Promise<ImportResult> {
   const parsed = parseAndValidateCard(pngBase64);
   if (!parsed.ok) return parsed;
 
   const { cardData, spec, specVersion, pngBytes } = parsed.parsed;
+
+  const name = deriveDisplayName(cardData);
 
   const id = randomUUID();
   const filename = `${id}.png`;
@@ -174,15 +194,64 @@ export async function importCharacterCard(
   }
 
   try {
-    const character = repoCreate({
-      id,
-      userId,
-      name: cardData.name,
-      data: cardData,
-      imagePath: storedPath,
-      spec,
-      specVersion,
-    });
+    const character = repoCreate(
+      {
+        id,
+        userId,
+        name,
+        data: cardData,
+        imagePath: storedPath,
+        spec,
+        specVersion,
+      },
+      db,
+    );
+
+    let lorebook: ImportedLorebook | null = null;
+    if (cardData.character_book?.entries?.length) {
+      const standalone = convertCharacterBookToStandalone(cardData.character_book, name);
+      if (standalone.entries.length > 0) {
+        const exists = repoListLorebooks(userId, db).some((lb) => lb.name === standalone.name);
+        if (!exists) {
+          try {
+            const lbId = randomUUID();
+            repoCreateLorebook(
+              {
+                id: lbId,
+                userId,
+                name: standalone.name,
+                description: standalone.description,
+                config: standalone.config,
+              },
+              db,
+            );
+            let entriesInserted = 0;
+            for (const entry of standalone.entries) {
+              try {
+                repoCreateLoreEntry(
+                  userId,
+                  { id: randomUUID(), lorebookId: lbId, uid: entry.uid, data: entry },
+                  db,
+                );
+                entriesInserted++;
+              } catch {
+                /* (lorebookId, uid) collision — skip this entry */
+              }
+            }
+            lorebook = {
+              id: lbId,
+              name: standalone.name,
+              entriesInserted,
+              entriesSkipped:
+                standalone.entriesSkipped + (standalone.entries.length - entriesInserted),
+            };
+          } catch {
+            /* book-level failure — leave lorebook null, character import still succeeds */
+          }
+        }
+      }
+    }
+
     return {
       ok: true,
       character: {
@@ -190,6 +259,7 @@ export async function importCharacterCard(
         name: character.name,
         imagePath: character.imagePath,
       },
+      lorebook,
     };
   } catch (e) {
     try {

@@ -1,9 +1,31 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PNGtext from "png-chunk-text";
 import { crc32 } from "crc";
-import { parseAndValidateCard, previewCharacterCard } from "@/server/services/character/importer";
-import { createCharacter } from "@/db/repositories/characters";
+import {
+  importCharacterCard,
+  parseAndValidateCard,
+  previewCharacterCard,
+} from "@/server/services/character/importer";
+import { createCharacter, getCharacter } from "@/db/repositories/characters";
+import {
+  createLorebook,
+  getLorebook,
+  listEntries,
+  listLorebooks,
+} from "@/db/repositories/lorebooks";
+import { DEFAULT_LORE_CONFIG } from "@/lib/st-core/lorebook";
 import { makeTestDb, seedTestUser, type TestDb } from "@/db/__tests__/helpers";
+
+vi.mock("@/server/uploads", () => ({
+  ensureUploadsDirs: vi.fn(async () => {}),
+  diskPathFromStored: (p: string) => `/tmp/charon-test/${p}`,
+  storedPathFromDiskComponents: (_s: string, f: string) => `uploads/avatars/${f}`,
+}));
+vi.mock("node:fs/promises", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("node:fs/promises")>()),
+  writeFile: vi.fn(async () => {}),
+  rm: vi.fn(async () => {}),
+}));
 
 /**
  * Build a minimal PNG with arbitrary tEXt chunks + IEND. Same approach as
@@ -235,5 +257,137 @@ describe("previewCharacterCard", () => {
       expect(result.data.preview.lorebookEntryCount).toBe(0);
       expect(result.data.duplicateOf).toBeNull();
     }
+  });
+});
+
+function cardWithData(data: Record<string, unknown>): string {
+  const png = buildPng([
+    {
+      keyword: "chara",
+      text: JSON.stringify({
+        spec: "chara_card_v2",
+        spec_version: "2.0",
+        data: {
+          name: "Unnamed",
+          description: "A test character",
+          personality: "Helpful",
+          scenario: "Testing",
+          first_mes: "Hello!",
+          mes_example: "",
+          creator_notes: "Test notes",
+          system_prompt: "",
+          post_history_instructions: "",
+          alternate_greetings: [],
+          tags: [],
+          creator: "Tester",
+          character_version: "1.0",
+          extensions: {},
+          ...data,
+        },
+      }),
+    },
+  ]);
+  return Buffer.from(png).toString("base64");
+}
+
+describe("importCharacterCard with embedded lorebook", () => {
+  let db: TestDb;
+  let userId: string;
+  let ctx: ReturnType<typeof makeTestDb>;
+
+  beforeEach(() => {
+    ctx = makeTestDb();
+    db = ctx.db;
+    userId = seedTestUser(db);
+  });
+
+  afterEach(() => {
+    ctx.sqlite.close();
+  });
+
+  it("creates a standalone disabled lorebook from the embedded book", async () => {
+    const res = await importCharacterCard(makeCard("Zephyr"), userId, db);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.lorebook).not.toBeNull();
+    expect(res.lorebook!.name).toBe("Zephyr [embedded]");
+    expect(res.lorebook!.entriesInserted).toBe(2);
+    const lb = getLorebook(userId, res.lorebook!.id, db);
+    expect(lb.name).toBe("Zephyr [embedded]");
+    const imported = listLorebooks(userId, db).find((b) => b.id === res.lorebook!.id);
+    expect(imported?.enabled).toBe(false);
+  });
+
+  it("preserves a Yume-style book with empty keys", async () => {
+    const b64 = cardWithData({
+      character_book: {
+        entries: [
+          { keys: [], content: "Lore A" },
+          { keys: [], content: "Lore B" },
+        ],
+      },
+    });
+    const res = await importCharacterCard(b64, userId, db);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.lorebook).not.toBeNull();
+    expect(res.lorebook!.entriesInserted).toBe(2);
+    expect(listEntries(userId, res.lorebook!.id, db)).toHaveLength(2);
+  });
+
+  it("skips extraction when a same-named lorebook already exists", async () => {
+    createLorebook(
+      {
+        id: "lb-existing",
+        userId,
+        name: "Zephyr [embedded]",
+        description: null,
+        config: DEFAULT_LORE_CONFIG,
+      },
+      db,
+    );
+    const res = await importCharacterCard(makeCard("Zephyr"), userId, db);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.lorebook).toBeNull();
+  });
+
+  it("returns no lorebook when the card has no embedded book", async () => {
+    const res = await importCharacterCard(cardWithData({}), userId, db);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.lorebook).toBeNull();
+  });
+
+  it("uses the Chub-slug-derived name", async () => {
+    const b64 = cardWithData({
+      name: "Mom",
+      extensions: { chub: { full_path: "Anonymous/emme-freehold-your-pet-mom-656d8b705cfb" } },
+    });
+    const res = await importCharacterCard(b64, userId, db);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.character.name).toBe("Emme Freehold Your Pet Mom");
+    const stored = getCharacter(userId, res.character.id, db);
+    expect(stored.name).toBe("Emme Freehold Your Pet Mom");
+    expect(stored.data.name).toBe("Mom");
+  });
+
+  it("survives a lorebook insert failure without failing the character import", async () => {
+    const b64 = cardWithData({
+      character_book: {
+        entries: [
+          { id: 1, keys: ["a"], content: "A" },
+          { id: 1, keys: ["b"], content: "B" },
+        ],
+      },
+    });
+    const res = await importCharacterCard(b64, userId, db);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.lorebook).not.toBeNull();
+    expect(res.lorebook!.entriesInserted).toBe(1);
+    expect(res.lorebook!.entriesSkipped).toBe(1);
+    expect(listEntries(userId, res.lorebook!.id, db)).toHaveLength(1);
   });
 });
