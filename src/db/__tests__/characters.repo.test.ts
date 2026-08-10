@@ -11,6 +11,12 @@ import {
 } from "@/db/repositories/characters";
 import { makeCharacterData } from "@/db/__tests__/character-data";
 import { makeTestDb, seedSecondUser, seedTestUser, type TestDb } from "@/db/__tests__/helpers";
+import {
+  createChat as repoCreateChat,
+  insertMessage as repoInsertMessage,
+  listChatsByCharacter,
+  listMessages,
+} from "@/db/repositories/chats";
 import { chats } from "@/db/schema";
 import type { CharacterDataV2 } from "@/lib/st-core/character";
 
@@ -228,6 +234,55 @@ describe("characters repository", () => {
     it("throws when deleting another user's character", () => {
       const otherId = seedSecondUser(db);
       expect(() => deleteCharacter(otherId, "char-1", db)).toThrow("Character not found");
+    });
+
+    it("deletes the character's chats and messages explicitly with FK enforcement off", () => {
+      // dev.db runtime has FK enforcement off (src/db/index.ts), so deletions must cascade by hand.
+      ctx.sqlite.pragma("foreign_keys = OFF");
+      createCharacter({ id: "char-2", userId, name: "Y", data: makeCharacterData() }, db);
+      repoCreateChat({ id: "chat-a", userId, characterId: "char-2", title: "A" }, db);
+      repoCreateChat({ id: "chat-b", userId, characterId: "char-2", title: "B" }, db);
+      for (const localId of [1, 2, 3]) {
+        repoInsertMessage(
+          userId,
+          "chat-a",
+          {
+            chatId: "chat-a",
+            localId,
+            parentLocalId: null,
+            children: [],
+            selectedChildLocalId: null,
+            role: "assistant",
+            content: `a-${localId}`,
+            extra: null,
+          },
+          db,
+        );
+      }
+      for (const localId of [1, 2]) {
+        repoInsertMessage(
+          userId,
+          "chat-b",
+          {
+            chatId: "chat-b",
+            localId,
+            parentLocalId: null,
+            children: [],
+            selectedChildLocalId: null,
+            role: "user",
+            content: `b-${localId}`,
+            extra: null,
+          },
+          db,
+        );
+      }
+
+      deleteCharacter(userId, "char-2", db);
+
+      expect(listChatsByCharacter(userId, "char-2", db)).toEqual([]);
+      expect(() => listMessages(userId, "chat-a", db)).toThrow("Chat not found");
+      expect(() => listMessages(userId, "chat-b", db)).toThrow("Chat not found");
+      expect(() => getCharacter(userId, "char-2", db)).toThrow("Character not found");
     });
   });
 

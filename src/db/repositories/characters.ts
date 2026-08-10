@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { db as defaultDb, type DB } from "@/db";
 import { characters, chatMessages, chats, type Character, type NewCharacter } from "@/db/schema";
 import type { CharacterDataV2 } from "@/lib/st-core/character";
@@ -218,6 +218,18 @@ export function updateCharacter(
 }
 
 export function deleteCharacter(userId: string, id: string, db: DB = defaultDb): void {
+  // Manually delete chats and messages first since FK enforcement is off in dev.db
+  // (mirrors deleteChat in src/db/repositories/chats.ts:148-158).
+  const chatIds = db
+    .select({ id: chats.id })
+    .from(chats)
+    .where(and(eq(chats.characterId, id), eq(chats.userId, userId)))
+    .all()
+    .map((r) => r.id);
+  if (chatIds.length > 0) {
+    db.delete(chatMessages).where(inArray(chatMessages.chatId, chatIds)).run();
+    db.delete(chats).where(inArray(chats.id, chatIds)).run();
+  }
   const result = db
     .delete(characters)
     .where(and(eq(characters.id, id), eq(characters.userId, userId)))
