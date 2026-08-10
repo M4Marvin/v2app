@@ -28,6 +28,7 @@ import { authClient } from "@/lib/auth-client";
 import type { CharacterDetail } from "@/db/repositories/characters";
 import { useCharacter, useDeleteCharacter, useUpdateCharacter } from "@/hooks/useCharacters";
 import { useCreateChat, useChatsByCharacter } from "@/hooks/useChats";
+import { characterDeleteDescription } from "./delete-stats";
 
 export const Route = createFileRoute("/characters/$id")({
   component: CharacterDetailPage,
@@ -44,7 +45,7 @@ const SECTIONS = [
   { id: "metadata", label: "Metadata" },
 ];
 
-function CharacterDetailPage() {
+export function CharacterDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
@@ -362,7 +363,11 @@ function CharacterDetailPage() {
         open={delOpen}
         onOpenChange={(o) => !o && setDelOpen(false)}
         title="Delete character"
-        description="This will permanently delete this character and all associated chats and messages. This action cannot be undone."
+        description={characterDeleteDescription(
+          character.name,
+          character.chatCount,
+          character.messageCount,
+        )}
         destructive
         loading={deleteMutation.isPending}
         onConfirm={() => {
