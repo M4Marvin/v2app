@@ -16,6 +16,7 @@ export type CharacterCardItem = Pick<
 export type CharacterDetail = Character & {
   chatCount: number;
   userMessageCount: number;
+  messageCount: number;
 };
 
 export type CreateCharacterInput = {
@@ -155,6 +156,13 @@ export function getCharacterDetail(
       character: characters,
       chatCount: sql<number>`count(distinct ${chats.id})`.as("chatCount"),
       userMessageCount: sql<number>`count(${chatMessages.localId})`.as("userMessageCount"),
+      messageCount: sql<number>`(
+        select count(*) from ${chatMessages}
+        where ${chatMessages.chatId} in (
+          select ${chats.id} from ${chats}
+          where ${chats.characterId} = ${characters.id}
+        )
+      )`.as("messageCount"),
     })
     .from(characters)
     .leftJoin(chats, eq(chats.characterId, characters.id))
@@ -164,7 +172,12 @@ export function getCharacterDetail(
     .get();
 
   if (!row) throw new Error("Character not found");
-  return { ...row.character, chatCount: row.chatCount, userMessageCount: row.userMessageCount };
+  return {
+    ...row.character,
+    chatCount: row.chatCount,
+    userMessageCount: row.userMessageCount,
+    messageCount: row.messageCount,
+  };
 }
 
 export function derivedColumns(data: CharacterDataV2) {

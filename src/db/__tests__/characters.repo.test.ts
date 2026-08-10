@@ -3,6 +3,7 @@ import {
   createCharacter,
   deleteCharacter,
   getCharacter,
+  getCharacterDetail,
   listCharacters,
   searchCharacterCards,
   characterTagCounts,
@@ -283,6 +284,44 @@ describe("characters repository", () => {
       expect(() => listMessages(userId, "chat-a", db)).toThrow("Chat not found");
       expect(() => listMessages(userId, "chat-b", db)).toThrow("Chat not found");
       expect(() => getCharacter(userId, "char-2", db)).toThrow("Character not found");
+    });
+  });
+
+  describe("getCharacterDetail messageCount", () => {
+    it("counts all chat messages across the character's chats (all roles)", () => {
+      createCharacter({ id: "char-1", userId, name: "X", data: makeCharacterData() }, db);
+      repoCreateChat({ id: "chat-a", userId, characterId: "char-1", title: "A" }, db);
+      repoCreateChat({ id: "chat-b", userId, characterId: "char-1", title: "B" }, db);
+
+      const messages = [
+        { chatId: "chat-a", localId: 1, role: "user" },
+        { chatId: "chat-a", localId: 2, role: "assistant" },
+        { chatId: "chat-a", localId: 3, role: "assistant" },
+        { chatId: "chat-b", localId: 1, role: "user" },
+        { chatId: "chat-b", localId: 2, role: "system" },
+      ] as const;
+      for (const m of messages) {
+        repoInsertMessage(
+          userId,
+          m.chatId,
+          {
+            chatId: m.chatId,
+            localId: m.localId,
+            parentLocalId: null,
+            children: [],
+            selectedChildLocalId: null,
+            role: m.role,
+            content: `${m.chatId}-${m.localId}`,
+            extra: null,
+          },
+          db,
+        );
+      }
+
+      const detail = getCharacterDetail(userId, "char-1", db);
+      expect(detail.chatCount).toBe(2);
+      expect(detail.userMessageCount).toBe(2);
+      expect(detail.messageCount).toBe(5);
     });
   });
 
