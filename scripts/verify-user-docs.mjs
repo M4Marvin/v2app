@@ -103,7 +103,6 @@ const GLOSSARY_TERMS = [
   "impersonate",
   "continue",
   "markdown",
-  "admin",
 ];
 
 // Required exact-string labels per page.
@@ -125,7 +124,7 @@ const REQUIRED_LABELS = {
     "http://localhost:3000",
   ],
   "getting-started.md": [
-    "Sign up",
+    "Create your account",
     "onboarding",
     "Start chatting",
     "Import PNG",
@@ -173,7 +172,7 @@ const REQUIRED_LABELS = {
     "Profile",
   ],
   "troubleshooting.md": [
-    "pnpm create-admin",
+    "dev.db",
     "50 MB",
     "Auto-fix Markdown",
     "SQLite",

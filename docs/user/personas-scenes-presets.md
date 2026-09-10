@@ -14,7 +14,7 @@ The **Active persona** is account-wide. It applies to all your chats, not just t
 
 A scene is a background image shown behind a chat for atmosphere. In chat Settings, choose the **Scene** tab to see the library. Each chat keeps its own choice.
 
-Pick a background and it applies to that chat only. Click the same one again to deselect it. **Clear scene** removes it entirely. As the admin, you can upload your own background images and delete ones you've added. Charon ships with no default backgrounds, so the library starts empty.
+Pick a background and it applies to that chat only. Click the same one again to deselect it. **Clear scene** removes it entirely. You can upload your own background images and delete ones you've added. Charon ships with no default backgrounds, so the library starts empty.
 
 ## Presets
 

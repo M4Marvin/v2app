@@ -6,14 +6,13 @@
 // impersonation prompt, post-history instructions).
 // Presets and chats are NOT migrated (out of scope).
 //
-// Re-runnable: skips existing rows by (userId, name) so it is safe to re-run
-// after a partial failure.
+// Re-runnable: skips existing rows by name so it is safe to re-run after a
+// partial failure.
 
 import { copyFile, mkdir, readdir, readFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, extname, join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -22,9 +21,12 @@ import {
   lorebooks,
   loreEntries,
   personas,
-  userSettings,
 } from "@/db/schema";
 import { derivedColumns } from "@/db/repositories/characters";
+import {
+  upsertUserSettings,
+  type UserSettingsPatch,
+} from "@/db/repositories/userSettings";
 import {
   parseCharacterCard,
   validateCharacterCard,
@@ -35,7 +37,6 @@ import {
 import { DEFAULT_LORE_CONFIG, type LoreEntry as LoreEntryData } from "@/lib/st-core/lorebook";
 import { normalizeCardData, normalizeV3ToV2 } from "@/lib/character/normalize";
 
-const DEFAULT_USER_ID = "default-user";
 const DATA_ROOT = "public/data";
 const AVATAR_DIR = "public/data/avatars";
 const AVATAR_PUBLIC_PREFIX = "data/avatars";
@@ -77,64 +78,24 @@ async function listFilesByExt(dir: string, ext: string): Promise<string[]> {
     .map((e) => join(dir, e.name));
 }
 
-function lorebookNameExists(userId: string, name: string): boolean {
-  const rows = db
-    .select({ name: lorebooks.name })
-    .from(lorebooks)
-    .where(eq(lorebooks.userId, userId))
-    .all();
+function lorebookNameExists(name: string): boolean {
+  const rows = db.select({ name: lorebooks.name }).from(lorebooks).all();
   return rows.some((r) => r.name === name);
 }
 
-function characterNameExists(userId: string, name: string): boolean {
-  const rows = db
-    .select({ name: characters.name })
-    .from(characters)
-    .where(eq(characters.userId, userId))
-    .all();
+function characterNameExists(name: string): boolean {
+  const rows = db.select({ name: characters.name }).from(characters).all();
   return rows.some((r) => r.name === name);
 }
 
-function personaNameExists(userId: string, name: string): boolean {
-  const rows = db
-    .select({ name: personas.name })
-    .from(personas)
-    .where(eq(personas.userId, userId))
-    .all();
+function personaNameExists(name: string): boolean {
+  const rows = db.select({ name: personas.name }).from(personas).all();
   return rows.some((r) => r.name === name);
-}
-
-// ── User ──────────────────────────────────────────────────────────────────
-
-function ensureDefaultUser(): void {
-  const existing = db
-    .select()
-    .from(user)
-    .where(eq(user.id, DEFAULT_USER_ID))
-    .get();
-  if (existing) {
-    console.log(`  → user already exists: ${DEFAULT_USER_ID}`);
-    return;
-  }
-  const now = new Date();
-  db.insert(user)
-    .values({
-      id: DEFAULT_USER_ID,
-      name: "Default User",
-      email: "default@charon.local",
-      username: "default",
-      displayUsername: "default",
-      createdAt: now,
-      updatedAt: now,
-    })
-    .run();
-  console.log(`  → created user: ${DEFAULT_USER_ID}`);
 }
 
 // ── Characters + embedded lorebooks ────────────────────────────────────────
 
 function insertLorebookFromBook(
-  userId: string,
   name: string,
   book: CharacterBook,
 ): { id: string; entries: number } | null {
@@ -144,7 +105,6 @@ function insertLorebookFromBook(
     db.insert(lorebooks)
       .values({
         id,
-        userId,
         name,
         config: { ...DEFAULT_LORE_CONFIG },
         createdAt: now,
@@ -183,18 +143,13 @@ function insertLorebookFromBook(
 }
 
 async function migrateCharacters(
-  userId: string,
   characterByName: Map<string, string>,
 ): Promise<{ characters: Counts; embeddedLorebooks: number }> {
   const counts: Counts = { ...ZERO };
   let embeddedCount = 0;
 
   // Seed the map with whatever already exists
-  const existing = db
-    .select()
-    .from(characters)
-    .where(eq(characters.userId, userId))
-    .all();
+  const existing = db.select().from(characters).all();
   for (const row of existing) {
     characterByName.set(row.name, row.id);
   }
@@ -253,7 +208,7 @@ async function migrateCharacters(
 
     const name = (data.name || fileBase).trim();
 
-    if (characterNameExists(userId, name)) {
+    if (characterNameExists(name)) {
       counts.skipped++;
       continue;
     }
@@ -276,7 +231,6 @@ async function migrateCharacters(
       db.insert(characters)
         .values({
           id,
-          userId,
           name,
           data,
           imagePath: avatarPath,
@@ -299,8 +253,8 @@ async function migrateCharacters(
 
     if (data.character_book) {
       const embeddedName = `${name} [embedded]`;
-      if (!lorebookNameExists(userId, embeddedName)) {
-        const result = insertLorebookFromBook(userId, embeddedName, data.character_book);
+      if (!lorebookNameExists(embeddedName)) {
+        const result = insertLorebookFromBook(embeddedName, data.character_book);
         if (result) embeddedCount++;
       }
     }
@@ -322,7 +276,6 @@ interface WorldFile {
 }
 
 function insertLorebookFromWorldFile(
-  userId: string,
   name: string,
   world: WorldFile,
 ): { id: string; entries: number } | null {
@@ -332,7 +285,6 @@ function insertLorebookFromWorldFile(
     db.insert(lorebooks)
       .values({
         id,
-        userId,
         name,
         config: { ...DEFAULT_LORE_CONFIG },
         createdAt: now,
@@ -370,9 +322,7 @@ function insertLorebookFromWorldFile(
   return { id, entries: inserted };
 }
 
-async function migrateLorebooks(
-  userId: string,
-): Promise<{ lorebooks: Counts; loreEntries: number }> {
+async function migrateLorebooks(): Promise<{ lorebooks: Counts; loreEntries: number }> {
   const counts: Counts = { ...ZERO };
   let totalEntries = 0;
 
@@ -386,7 +336,7 @@ async function migrateLorebooks(
 
   for (const filePath of files) {
     const name = basename(filePath, extname(filePath));
-    if (lorebookNameExists(userId, name)) {
+    if (lorebookNameExists(name)) {
       counts.skipped++;
       continue;
     }
@@ -401,7 +351,7 @@ async function migrateLorebooks(
       continue;
     }
 
-    const result = insertLorebookFromWorldFile(userId, name, world);
+    const result = insertLorebookFromWorldFile(name, world);
     if (result) {
       counts.inserted++;
       totalEntries += result.entries;
@@ -431,7 +381,7 @@ interface SettingsFile {
   [k: string]: unknown;
 }
 
-async function migratePersonas(userId: string): Promise<Counts> {
+async function migratePersonas(): Promise<Counts> {
   const counts: Counts = { ...ZERO };
   const settingsPath = join(DATA_ROOT, "settings.json");
   if (!existsSync(settingsPath)) return counts;
@@ -452,7 +402,7 @@ async function migratePersonas(userId: string): Promise<Counts> {
   counts.found = Object.keys(personasMap).length;
 
   for (const [avatarKey, name] of Object.entries(personasMap)) {
-    if (personaNameExists(userId, name)) {
+    if (personaNameExists(name)) {
       counts.skipped++;
       continue;
     }
@@ -486,7 +436,6 @@ async function migratePersonas(userId: string): Promise<Counts> {
       db.insert(personas)
         .values({
           id,
-          userId,
           name,
           description,
           iconPath,
@@ -507,7 +456,7 @@ async function migratePersonas(userId: string): Promise<Counts> {
 
 // ── User settings (prompts from settings.json) ───────────────────────────
 
-function migrateUserSettings(userId: string): void {
+function migrateUserSettings(accountId: string): void {
   const settingsPath = join(DATA_ROOT, "settings.json");
   if (!existsSync(settingsPath)) return;
 
@@ -518,7 +467,7 @@ function migrateUserSettings(userId: string): void {
     return;
   }
 
-  const patch: Record<string, string | null> = {};
+  const patch: UserSettingsPatch = {};
 
   // systemPrompt — from power_user.sysprompt.content
   const sysprompt = (settings as any).power_user?.sysprompt;
@@ -541,19 +490,7 @@ function migrateUserSettings(userId: string): void {
   const keys = Object.keys(patch);
   if (keys.length === 0) return;
 
-  const now = new Date();
-  db.insert(userSettings)
-    .values({
-      userId,
-      ...patch,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .onConflictDoUpdate({
-      target: userSettings.userId,
-      set: { ...patch, updatedAt: now },
-    })
-    .run();
+  upsertUserSettings(accountId, patch);
 
   console.log(`  → migrated user settings: ${keys.join(", ")}`);
 }
@@ -584,32 +521,38 @@ async function main() {
   console.log("DB:", process.env.DATABASE_URL ?? "(DATABASE_URL not set)");
   console.log("");
 
-  console.log("[1/4] Ensuring default user...");
-  ensureDefaultUser();
-  const userId = DEFAULT_USER_ID;
+  console.log("[1/5] Resolving account...");
+  const account = db.select({ id: user.id }).from(user).limit(1).get();
+  if (!account) {
+    console.error(
+      "No account found — open the app and complete the first-run setup before importing SillyTavern data.",
+    );
+    process.exit(1);
+  }
+  console.log(`  → using account: ${account.id}`);
 
   const characterByName = new Map<string, string>();
 
-  console.log("\n[2/4] Migrating characters...");
-  const charResult = await migrateCharacters(userId, characterByName);
+  console.log("\n[2/5] Migrating characters...");
+  const charResult = await migrateCharacters(characterByName);
   console.log(
     `  → ${charResult.characters.inserted} inserted, ${charResult.characters.skipped} skipped, ${charResult.characters.failed} failed`,
   );
 
-  console.log("\n[3/4] Migrating standalone lorebooks (worlds/*.json)...");
-  const loreResult = await migrateLorebooks(userId);
+  console.log("\n[3/5] Migrating standalone lorebooks (worlds/*.json)...");
+  const loreResult = await migrateLorebooks();
   console.log(
     `  → ${loreResult.lorebooks.inserted} inserted, ${loreResult.lorebooks.skipped} skipped, ${loreResult.lorebooks.failed} failed, ${loreResult.loreEntries} entries`,
   );
 
-  console.log("\n[4/4] Migrating personas...");
-  const personaResult = await migratePersonas(userId);
+  console.log("\n[4/5] Migrating personas...");
+  const personaResult = await migratePersonas();
   console.log(
     `  → ${personaResult.inserted} inserted, ${personaResult.skipped} skipped, ${personaResult.failed} failed`,
   );
 
   console.log("\n[5/5] Migrating user settings (prompts)...");
-  migrateUserSettings(userId);
+  migrateUserSettings(account.id);
 
   printSummary({
     characters: charResult.characters,

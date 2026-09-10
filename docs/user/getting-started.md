@@ -6,23 +6,24 @@ Charon is a roleplaying app that runs on your own computer. This page walks you 
 
 This guide assumes Charon is installed and running. If it is not, the README at ../../README.md has the full install steps. You can run Charon with Docker (`docker compose up -d`) or with the pnpm dev server. Migrations run automatically on first start, so there is nothing else to do. When Charon is ready, open http://localhost:3000 in your browser.
 
-## Create your account
+## Create your account (first run)
+
+The first time you open Charon, the welcome page has a **Get Started** button. It leads to the **Create your account** page. You only see this page on a fresh install; once your account exists, it sends you to sign-in instead.
 
 1. Open http://localhost:3000.
-2. Click **Sign up**.
+2. Click **Get Started**.
 3. Pick a **username**. It must be at least 3 characters, using letters, numbers, and underscores only.
 4. Pick a **password**. It must be at least 8 characters.
 
-You don't need an email address. Your account lives on your own machine, so there is nothing to verify and nothing to confirm in your inbox. Just fill in the two fields and finish the signup.
+You don't need an email address. Your account lives on your own machine, so there is nothing to verify and nothing to confirm in your inbox. After the account exists, sign in with your username and password on later visits.
 
 ## The onboarding wizard
 
-After you sign up, you land in the onboarding wizard. It guides you through setup one step at a time, right in the browser, with no commands to type and nothing to install.
+After you create your account, you land in the onboarding wizard. It guides you through setup one step at a time, right in the browser, with no commands to type and nothing to install.
 
 The wizard adapts to what you already have. It only shows the steps you still need, in this order:
 
 - **Welcome**: a quick hello to start.
-- **Make me the admin**: shown only to the very first user on a fresh install. It is recommended for a personal install. This is how you get admin powers, like importing characters and managing AI providers.
 - **Connect an AI provider**: shown only if no provider is set up yet.
 - **Get a character**: bring in a character card, or keep the characters already waiting for you.
 - **You're all set**: the final step. Click **Start chatting** to leave the wizard.
@@ -62,8 +63,6 @@ Pick a character and click **Start Chat** to begin. The character's greeting app
 ## Need to change something later?
 
 You can revisit the wizard anytime from **Settings** → **Onboarding**. If you skipped a step, it shows you what is missing, and the rest of the app keeps working while you catch up.
-
-A note for the very first user: the **Make me the admin** step is how you get admin powers, like importing characters and managing providers. If you skip it, you can't import characters. You can still come back through **Settings** → **Onboarding** and promote yourself then.
 
 ## What to try next
 
