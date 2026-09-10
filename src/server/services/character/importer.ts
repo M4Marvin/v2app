@@ -26,7 +26,6 @@ import {
 import type { DB } from "@/db";
 
 export type ImportError =
-  | { kind: "demo_restricted"; message: string }
   | { kind: "invalid_png"; message: string }
   | { kind: "validation"; errors: { field: string; message: string }[] }
   | { kind: "save_failed"; message: string };

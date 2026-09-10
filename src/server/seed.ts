@@ -74,6 +74,11 @@ export async function seedSampleData(userId: string): Promise<void> {
     creator: "m4marvin",
     character_version: "1.0",
     talkativeness: 70,
+    depth_prompt: {
+      prompt: "Jack's hidden guilt and past in the navy should inform his moments of seriousness.",
+      depth: 4,
+      role: "system",
+    },
   });
 
   createDemoCharacter("starter-scientist", {
@@ -102,6 +107,12 @@ export async function seedSampleData(userId: string): Promise<void> {
     creator: "m4marvin",
     character_version: "1.0",
     talkativeness: 50,
+    depth_prompt: {
+      prompt:
+        "Elena's enthusiasm for science should be balanced with moments of quiet reflection and loneliness.",
+      depth: 4,
+      role: "system",
+    },
   });
 
   // Creative preset
@@ -150,6 +161,7 @@ type DemoCharacterInput = {
   character_version: string;
   imagePath?: string;
   talkativeness?: number;
+  depth_prompt?: { prompt: string; depth: number; role: "system" | "user" | "assistant" };
 };
 
 function createDemoCharacter(id: string, input: DemoCharacterInput): void {
@@ -171,7 +183,10 @@ function createDemoCharacter(id: string, input: DemoCharacterInput): void {
       tags: input.tags,
       creator: input.creator,
       character_version: input.character_version,
-      extensions: input.talkativeness !== undefined ? { talkativeness: input.talkativeness } : {},
+      extensions: {
+        ...(input.talkativeness !== undefined ? { talkativeness: input.talkativeness } : {}),
+        ...(input.depth_prompt ? { depth_prompt: input.depth_prompt } : {}),
+      },
     },
     tagline: input.description.split("\n")[0]?.slice(0, 120) ?? input.name,
   });

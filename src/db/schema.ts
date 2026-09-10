@@ -285,10 +285,10 @@ export const personas = sqliteTable("personas", {
     .$defaultFn(() => new Date()),
 });
 
-// One row per user; stores the AI defaults to seed new chats with, plus
-// per-user prompt overrides. Upserted on first use. All new columns
-// nullable so partial settings work — a user can fill in just the system
-// prompt and leave the rest blank.
+// Account settings row; stores AI defaults to seed new chats plus prompt
+// overrides. Upserted on first use. All new columns nullable so partial
+// settings work — a user can fill in just the system prompt and leave the
+// rest blank.
 export const userSettings = sqliteTable("user_settings", {
   userId: text("user_id")
     .primaryKey()

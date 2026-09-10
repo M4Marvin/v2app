@@ -76,7 +76,7 @@ export function buildMessages(
 
   // Collect lore entries: first from embedded character_book, then
   // caller-supplied extras (e.g. standalone lorebooks the user has
-  // enabled, with per-user entry disables already applied by the caller).
+  // enabled, with entry disables already applied by the caller).
   // Pre-filter `disable: true` on both sources so it takes effect in the
   // initial scan (the scan only checks `disable` during recursion).
   const loreEntries: import("@/lib/st-core/lorebook/types").LoreEntry[] = [];

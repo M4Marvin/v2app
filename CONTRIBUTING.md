@@ -47,7 +47,7 @@ src/
       characters/$id/avatar.ts
       backgrounds/$id/image.ts
       personas/$id/icon.ts
-    characters/, settings/, lorebooks/, demo/
+    characters/, settings/, lorebooks/
   components/ui/          # shadcn/ui components
   hooks/                  # TanStack Query hooks
   lib/
@@ -273,5 +273,4 @@ Live in `src/components/common/`. All follow shadcn conventions (spread props, `
 | `ModelCombobox` | Searchable model picker with free-text + refresh |
 | `SectionNav` | Scroll-spy section navigation (left rail desktop, chip scroller mobile) |
 | `SaveBar` | Sticky bottom save bar with dirty-state awareness |
-| `DemoBanner` | Dismissible info banner for demo users |
 | `MobileTabBar` | Fixed bottom navigation (Chats · Characters · New · Lorebooks) |

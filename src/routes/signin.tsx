@@ -90,7 +90,7 @@ function SigninPage() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         type="text"
-                        placeholder="demo"
+                        placeholder="username"
                         autoComplete="username"
                         minLength={1}
                         aria-invalid={isInvalid}
