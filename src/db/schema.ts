@@ -124,24 +124,21 @@ export const characters = sqliteTable(
   ],
 );
 
-export const lorebooks = sqliteTable(
-  "lorebooks",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    name: text("name").notNull(),
-    description: text("description"),
-    config: text("config", { mode: "json" }).$type<LoreConfig>().notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-    enabled: integer("enabled").notNull().default(0),
-  },
-);
+export const lorebooks = sqliteTable("lorebooks", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  config: text("config", { mode: "json" }).$type<LoreConfig>().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  enabled: integer("enabled").notNull().default(0),
+});
 
 export const loreEntries = sqliteTable(
   "lore_entries",
@@ -190,9 +187,7 @@ export const chats = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (table) => [
-    index("chats_character_id_idx").on(table.characterId),
-  ],
+  (table) => [index("chats_character_id_idx").on(table.characterId)],
 );
 
 export const chatMessages = sqliteTable(
@@ -247,9 +242,7 @@ export const aiProviders = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (table) => [
-    uniqueIndex("ai_providers_name_uq").on(table.name),
-  ],
+  (table) => [uniqueIndex("ai_providers_name_uq").on(table.name)],
 );
 
 export const presets = sqliteTable(
@@ -277,23 +270,20 @@ export const presets = sqliteTable(
   ],
 );
 
-export const personas = sqliteTable(
-  "personas",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    name: text("name").notNull(),
-    description: text("description"),
-    iconPath: text("icon_path"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-  },
-);
+export const personas = sqliteTable("personas", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  iconPath: text("icon_path"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
 
 // One row per user; stores the AI defaults to seed new chats with, plus
 // per-user prompt overrides. Upserted on first use. All new columns

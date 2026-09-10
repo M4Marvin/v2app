@@ -48,23 +48,14 @@ export function createPreset(input: CreatePresetInput, db: DB = defaultDb): Pres
   return db.insert(presets).values(row).returning().get();
 }
 
-export function updatePreset(
-  id: string,
-  patch: UpdatePresetInput,
-  db: DB = defaultDb,
-): Preset {
+export function updatePreset(id: string, patch: UpdatePresetInput, db: DB = defaultDb): Preset {
   const existing = getPreset(id, db);
   const updates: Partial<NewPreset> = { updatedAt: new Date() };
   if (patch.name !== undefined) updates.name = patch.name;
   if (patch.providerId !== undefined) updates.providerId = patch.providerId;
   if (patch.model !== undefined) updates.model = patch.model;
   if (patch.data !== undefined) updates.data = patch.data;
-  const row = db
-    .update(presets)
-    .set(updates)
-    .where(eq(presets.id, existing.id))
-    .returning()
-    .get();
+  const row = db.update(presets).set(updates).where(eq(presets.id, existing.id)).returning().get();
   if (!row) throw new Error("Preset not found");
   return row;
 }

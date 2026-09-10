@@ -59,13 +59,7 @@ export function prepareStream(
     const settings = getUserSettings(userId, db); // account FK
     if (!hasProvider(settings)) {
       const reply = substituteMessageMacros(pickDefaultReply(), macroEnv);
-      const { replyMessage } = appendUserAndReply(
-        input.chatId,
-        userContent,
-        reply,
-        undefined,
-        db,
-      );
+      const { replyMessage } = appendUserAndReply(input.chatId, userContent, reply, undefined, db);
       log.info("prepareStream: fallback mode (no provider)", {
         assistantMessageLocalId: replyMessage.localId,
       });

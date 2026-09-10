@@ -25,8 +25,7 @@ export async function seedSampleData(userId: string): Promise<void> {
   const charId = randomUUID();
   const sampleData: CharacterDataV2 = {
     name: "Sample",
-    description:
-      "Your character. Set their description, personality, and greeting in the editor.",
+    description: "Your character. Set their description, personality, and greeting in the editor.",
     personality: "",
     scenario: "",
     first_mes: "*Awaits your input*",
@@ -172,9 +171,7 @@ function createDemoCharacter(id: string, input: DemoCharacterInput): void {
       tags: input.tags,
       creator: input.creator,
       character_version: input.character_version,
-      extensions: {
-        ...(input.talkativeness !== undefined ? { talkativeness: input.talkativeness } : {}),
-      },
+      extensions: input.talkativeness !== undefined ? { talkativeness: input.talkativeness } : {},
     },
     tagline: input.description.split("\n")[0]?.slice(0, 120) ?? input.name,
   });

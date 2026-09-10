@@ -56,7 +56,9 @@ describe("ensureStartupTasks", () => {
     await ensureStartupTasks();
 
     const fs = await import("node:fs/promises");
-    const mkdirCalls = (fs.mkdir as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
+    const mkdirCalls = (fs.mkdir as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
+      (c) => c[0],
+    );
     expect(mkdirCalls).toEqual(
       expect.arrayContaining([
         "data/uploads/avatars",

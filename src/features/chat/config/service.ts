@@ -10,7 +10,9 @@ import { createLogger } from "@/features/logging";
 
 const log = createLogger("chat:config:service");
 
-export function hasProvider(settings: { defaultProviderId: string | null } | null | undefined): boolean {
+export function hasProvider(
+  settings: { defaultProviderId: string | null } | null | undefined,
+): boolean {
   return !!settings?.defaultProviderId;
 }
 

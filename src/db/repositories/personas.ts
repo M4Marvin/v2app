@@ -35,11 +35,7 @@ export function createPersona(input: CreatePersonaInput, db: DB = defaultDb): Pe
   return db.insert(personas).values(row).returning().get();
 }
 
-export function updatePersona(
-  id: string,
-  patch: UpdatePersonaInput,
-  db: DB = defaultDb,
-): Persona {
+export function updatePersona(id: string, patch: UpdatePersonaInput, db: DB = defaultDb): Persona {
   const existing = getPersona(id, db);
   const updates: Partial<NewPersona> = { updatedAt: new Date() };
   if (patch.name !== undefined) updates.name = patch.name;

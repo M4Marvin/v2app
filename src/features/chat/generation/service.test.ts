@@ -42,10 +42,7 @@ describe("generation service", () => {
         updatedAt: new Date(),
       })
       .run();
-    const chat = createChat(
-      { characterId: charId, title: "Test", greetings: ["Hello!"] },
-      db,
-    );
+    const chat = createChat({ characterId: charId, title: "Test", greetings: ["Hello!"] }, db);
     chatId = chat.id;
   });
 
@@ -222,13 +219,7 @@ describe("generation service", () => {
 
     it("throws when locked", () => {
       seedProvider();
-      const { replyMessage } = appendUserAndReply(
-        chatId,
-        "Hi",
-        "",
-        { isStreaming: true },
-        db,
-      );
+      const { replyMessage } = appendUserAndReply(chatId, "Hi", "", { isStreaming: true }, db);
       acquireGenerationLock(chatId, replyMessage.localId, db);
       expect(() =>
         prepareStream(
@@ -573,10 +564,7 @@ describe("generation service", () => {
 
     it("falls back to character.scenario as the scene on an empty conversation", async () => {
       seedProvider();
-      const emptyChat = createChat(
-        { characterId: charId, title: "Empty", greetings: [""] },
-        db,
-      );
+      const emptyChat = createChat({ characterId: charId, title: "Empty", greetings: [""] }, db);
       const mockFetch = mockImagePromptFetch();
 
       await generateImagePrompt(

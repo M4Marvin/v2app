@@ -248,13 +248,7 @@ describe("tree service", () => {
         db,
       );
 
-      const { replyMessage } = appendUserAndReply(
-        chat.id,
-        "Hi",
-        "",
-        { isStreaming: true },
-        db,
-      );
+      const { replyMessage } = appendUserAndReply(chat.id, "Hi", "", { isStreaming: true }, db);
 
       expect(replyMessage.extra).toEqual({ isStreaming: true });
     });
@@ -479,10 +473,7 @@ describe("tree service", () => {
 
   describe("appendSibling", () => {
     it("creates a sibling at the end and selects it", () => {
-      const chat = createChat(
-        { characterId: charId, title: "Test", greetings: ["Hi"] },
-        db,
-      );
+      const chat = createChat({ characterId: charId, title: "Test", greetings: ["Hi"] }, db);
 
       const { userMessage, replyMessage } = appendUserAndReply(
         chat.id,
@@ -512,27 +503,13 @@ describe("tree service", () => {
     });
 
     it("rejects when locked", () => {
-      const chat = createChat(
-        { characterId: charId, title: "Test", greetings: ["Hi"] },
-        db,
-      );
+      const chat = createChat({ characterId: charId, title: "Test", greetings: ["Hi"] }, db);
 
-      const { replyMessage } = appendUserAndReply(
-        chat.id,
-        "Hi",
-        "",
-        { isStreaming: true },
-        db,
-      );
+      const { replyMessage } = appendUserAndReply(chat.id, "Hi", "", { isStreaming: true }, db);
       acquireGenerationLock(chat.id, replyMessage.localId, db);
 
       expect(() =>
-        appendSibling(
-          chat.id,
-          replyMessage.localId,
-          { role: "assistant", content: "x" },
-          db,
-        ),
+        appendSibling(chat.id, replyMessage.localId, { role: "assistant", content: "x" }, db),
       ).toThrow();
     });
   });
@@ -555,13 +532,8 @@ describe("tree service", () => {
     });
 
     it("still throws for root even with skipIdleCheck", () => {
-      const chat = createChat(
-        { characterId: charId, title: "Test", greetings: ["Hi"] },
-        db,
-      );
-      expect(() => deleteBranch(chat.id, 0, db, { skipIdleCheck: true })).toThrow(
-        "hidden root",
-      );
+      const chat = createChat({ characterId: charId, title: "Test", greetings: ["Hi"] }, db);
+      expect(() => deleteBranch(chat.id, 0, db, { skipIdleCheck: true })).toThrow("hidden root");
     });
   });
 

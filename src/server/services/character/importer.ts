@@ -162,10 +162,7 @@ export function previewCharacterCard(
   };
 }
 
-export async function importCharacterCard(
-  pngBase64: string,
-  db?: DB,
-): Promise<ImportResult> {
+export async function importCharacterCard(pngBase64: string, db?: DB): Promise<ImportResult> {
   const parsed = parseAndValidateCard(pngBase64);
   if (!parsed.ok) return parsed;
 

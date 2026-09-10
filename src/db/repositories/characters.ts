@@ -131,19 +131,12 @@ export function characterTagCounts(db: DB = defaultDb): { name: string; count: n
 }
 
 export function getCharacter(id: string, db: DB = defaultDb): Character {
-  const row = db
-    .select()
-    .from(characters)
-    .where(eq(characters.id, id))
-    .get();
+  const row = db.select().from(characters).where(eq(characters.id, id)).get();
   if (!row) throw new Error("Character not found");
   return row;
 }
 
-export function getCharacterDetail(
-  id: string,
-  db: DB = defaultDb,
-): CharacterDetail {
+export function getCharacterDetail(id: string, db: DB = defaultDb): CharacterDetail {
   const row = db
     .select({
       character: characters,

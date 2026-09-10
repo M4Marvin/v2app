@@ -17,11 +17,7 @@ import {
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
-import {
-  onboardingKeys,
-  useCompleteOnboarding,
-  useOnboardingStatus,
-} from "@/hooks/useOnboarding";
+import { onboardingKeys, useCompleteOnboarding, useOnboardingStatus } from "@/hooks/useOnboarding";
 import { ProviderStep } from "./provider-step";
 import { CharacterStep } from "./character-step";
 

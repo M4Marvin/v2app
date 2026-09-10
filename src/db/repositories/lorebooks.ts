@@ -224,11 +224,7 @@ export function listUserDisabledEntryIds(db: DB = defaultDb): string[] {
     .map((r) => r.id);
 }
 
-export function setLoreEntryDisabled(
-  entryId: string,
-  disabled: boolean,
-  db: DB = defaultDb,
-): void {
+export function setLoreEntryDisabled(entryId: string, disabled: boolean, db: DB = defaultDb): void {
   db.update(loreEntries)
     .set({ userDisabled: disabled ? 1 : 0 })
     .where(eq(loreEntries.id, entryId))

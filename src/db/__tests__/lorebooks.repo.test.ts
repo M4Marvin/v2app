@@ -176,9 +176,9 @@ describe("lorebooks repository", () => {
 
     it("throws when the lorebook does not exist", () => {
       const data = makeLoreEntry({ uid: 1 });
-      expect(() =>
-        createEntry({ id: "e-1", lorebookId: "missing", uid: 1, data }, db),
-      ).toThrow("Lorebook not found");
+      expect(() => createEntry({ id: "e-1", lorebookId: "missing", uid: 1, data }, db)).toThrow(
+        "Lorebook not found",
+      );
     });
   });
 

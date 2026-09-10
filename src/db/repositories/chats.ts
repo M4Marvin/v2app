@@ -92,10 +92,7 @@ export function listChats(db: DB = defaultDb): ChatWithCharacter[] {
   return enrichChats(rows, db);
 }
 
-export function listChatsByCharacter(
-  characterId: string,
-  db: DB = defaultDb,
-): ChatWithCharacter[] {
+export function listChatsByCharacter(characterId: string, db: DB = defaultDb): ChatWithCharacter[] {
   const rows = db
     .select({
       chat: chats,
@@ -111,11 +108,7 @@ export function listChatsByCharacter(
 }
 
 export function getChat(id: string, db: DB = defaultDb): Chat {
-  const row = db
-    .select()
-    .from(chats)
-    .where(eq(chats.id, id))
-    .get();
+  const row = db.select().from(chats).where(eq(chats.id, id)).get();
   if (!row) throw new Error("Chat not found");
   return row;
 }
@@ -179,11 +172,7 @@ function touchChat(chatId: string, db: DB = defaultDb): void {
   db.update(chats).set({ updatedAt: new Date() }).where(eq(chats.id, chatId)).run();
 }
 
-export function insertMessage(
-  chatId: string,
-  msg: NewChatMessageRow,
-  db: DB = defaultDb,
-): void {
+export function insertMessage(chatId: string, msg: NewChatMessageRow, db: DB = defaultDb): void {
   getChat(chatId, db);
   db.insert(chatMessages).values(msg).run();
   touchChat(chatId, db);
@@ -229,21 +218,12 @@ export function updateChat(
     updates.characterSystemPrompt = patch.characterSystemPrompt;
   if (patch.title !== undefined) updates.title = patch.title;
   if (patch.backgroundId !== undefined) updates.backgroundId = patch.backgroundId;
-  const row = db
-    .update(chats)
-    .set(updates)
-    .where(eq(chats.id, existing.id))
-    .returning()
-    .get();
+  const row = db.update(chats).set(updates).where(eq(chats.id, existing.id)).returning().get();
   if (!row) throw new Error("Chat not found");
   return row;
 }
 
-export function deleteMessages(
-  chatId: string,
-  localIds: number[],
-  db: DB = defaultDb,
-): void {
+export function deleteMessages(chatId: string, localIds: number[], db: DB = defaultDb): void {
   getChat(chatId, db);
   db.delete(chatMessages)
     .where(and(eq(chatMessages.chatId, chatId), inArray(chatMessages.localId, localIds)))

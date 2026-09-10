@@ -188,7 +188,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { queryClient, user } = Route.useRouteContext();
   const location = useLocation();
   const hideGlobalHeader =
-    /^\/chat\//.test(location.pathname) ||
+    location.pathname.startsWith("/chat/") ||
     /^\/c\/(?!new$)[^/]+$/.test(location.pathname) ||
     location.pathname === "/onboarding";
   const isAuthed = Boolean(user);
