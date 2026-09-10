@@ -15,6 +15,12 @@ const extraOrigins = (process.env.TRUSTED_ORIGINS || "")
 export const auth = betterAuth({
   baseURL: appUrl,
   trustedOrigins: [appUrl, "http://localhost:4173", ...extraOrigins],
+  // Allow cookie auth over plain-HTTP origins (LAN / reverse proxy without
+  // TLS). With an https baseURL, better-auth sets the Secure flag and browsers
+  // won't send the session cookie back over http, breaking login there.
+  advanced: {
+    useSecureCookies: false,
+  },
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema: { user, session, account, verification },
