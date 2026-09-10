@@ -54,6 +54,7 @@ src/
 scripts/
   migrate-data.ts         # Legacy SillyTavern importer
   create-admin.ts         # Bootstrap admin user
+  migrate-to-single-user.ts  # Single-user migration operator (pnpm migrate:single-user)
 ```
 
 ## Architecture (5 groups)
@@ -123,6 +124,9 @@ Import with `@/*` (not `#/*`). st-core internal imports use `.js` extensions.
 | DB migrate | `pnpm run db:migrate` |
 | DB push | `pnpm run db:push` |
 | DB studio | `pnpm run db:studio` |
+| Single-user migration (operator) | `pnpm run migrate:single-user` |
+
+Upgrading an existing database after the single-user change? Run `pnpm migrate:single-user` before the first boot: it backs the DB up to `dev.db.bak-single-user-<timestamp>` (including `-wal`/`-shm` if present) and then applies pending migrations through the same `src/db` migrator production uses, so the migration is deliberate and reversible (`cp dev.db.bak-single-user-<timestamp> dev.db`, plus the matching `-wal`/`-shm` backups if present).
 
 ## Pre-commit hook
 

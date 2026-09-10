@@ -40,4 +40,8 @@ A: Try the display toggles. **Auto-fix Markdown** repairs common formatting slip
 
 A: Everything is stored in a local SQLite file, plus an uploads folder for images, inside the Charon data directory on your machine. Backing up that folder backs up everything. See the [README](../../README.md) for the exact path.
 
+**Q: Will accounts be removed?**
+
+A: Run `pnpm migrate:single-user` first. It backs the database. Restore: `cp dev.db.bak-single-user-<timestamp> dev.db` (`-wal`/`-shm` if present).
+
 Back to the [overview](./index.md).

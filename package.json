@@ -17,6 +17,7 @@
     "migrate": "tsx scripts/migrate-data.ts",
     "backfill-chat-fields": "tsx --env-file=.env.local scripts/backfill-chat-character-fields.ts",
     "migrate:image-paths": "tsx scripts/migrate-image-paths.ts",
+    "migrate:single-user": "tsx scripts/migrate-to-single-user.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

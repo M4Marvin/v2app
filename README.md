@@ -51,6 +51,8 @@ openssl rand -hex 32  # ENCRYPTION_KEY
 
 Migrations run automatically on first start — no manual `db:migrate` needed.
 
+Upgrading an existing database from an older version? The first boot after the single-user update migrates it to a single admin account (removing other accounts). To do that deliberately and reversibly, stop the app and run `pnpm migrate:single-user` first — it copies the database (and its `-wal`/`-shm` sidecars, if any) to `dev.db.bak-single-user-<timestamp>` before migrating. If anything goes wrong, restore it with `cp dev.db.bak-single-user-<timestamp> dev.db` (using the exact `<timestamp>` the backup printed, plus the matching `-wal`/`-shm` backups if present) and start again.
+
 ---
 
 ## First-time setup
