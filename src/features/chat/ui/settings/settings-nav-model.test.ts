@@ -5,17 +5,16 @@ import { getVisibleNavGroups } from "./settings-nav-model";
 /** Real lucide icons aren't needed for grouping logic; a plain stub stands in. */
 const icon = {} as SettingsSection["icon"];
 
-const ADMIN_SECTIONS: SettingsSection[] = [
-  { id: "connection", label: "Connection", icon, adminOnly: true, group: "connection" },
+const SECTIONS: SettingsSection[] = [
+  { id: "connection", label: "Connection", icon, group: "connection" },
   {
     id: "providers",
     label: "Providers",
     icon,
-    adminOnly: true,
     group: "connection",
     secondary: true,
   },
-  { id: "presets", label: "Presets", icon, adminOnly: true, group: "connection", secondary: true },
+  { id: "presets", label: "Presets", icon, group: "connection", secondary: true },
   { id: "persona", label: "Persona", icon, group: "chat" },
   { id: "lorebooks", label: "Lorebooks", icon, group: "chat" },
   { id: "prompts", label: "Prompts", icon, group: "chat" },
@@ -25,31 +24,40 @@ const ADMIN_SECTIONS: SettingsSection[] = [
 ];
 
 describe("getVisibleNavGroups", () => {
-  it("groups admin sections into [connection, chat, display] with labels and item counts", () => {
-    const groups = getVisibleNavGroups(ADMIN_SECTIONS, true);
+  it("groups all sections into [connection, chat, display] with labels and item counts", () => {
+    const groups = getVisibleNavGroups(SECTIONS);
 
     expect(groups.map((g) => g.id)).toEqual(["connection", "chat", "display"]);
     expect(groups.map((g) => g.label)).toEqual(["Connection", "Chat", "Display"]);
     expect(groups.map((g) => g.items.length)).toEqual([3, 5, 1]);
   });
 
-  it("omits the connection group entirely for non-admins", () => {
-    const groups = getVisibleNavGroups(ADMIN_SECTIONS, false);
+  it("renders every section with no role filtering", () => {
+    const groups = getVisibleNavGroups(SECTIONS);
+    const ids = groups.flatMap((g) => g.items.map((s) => s.id));
 
-    expect(groups.map((g) => g.id)).toEqual(["chat", "display"]);
-    expect(groups.map((g) => g.items.length)).toEqual([5, 1]);
-    expect(groups.some((g) => g.id === "connection")).toBe(false);
+    expect(ids).toEqual([
+      "connection",
+      "providers",
+      "presets",
+      "persona",
+      "lorebooks",
+      "prompts",
+      "character",
+      "scene",
+      "display",
+    ]);
   });
 
   it("preserves secondary flags through grouping", () => {
-    const groups = getVisibleNavGroups(ADMIN_SECTIONS, true);
+    const groups = getVisibleNavGroups(SECTIONS);
     const connection = groups.find((g) => g.id === "connection")!;
 
     expect(connection.items.map((s) => s.secondary)).toEqual([undefined, true, true]);
   });
 
   it("preserves input order of items within each group", () => {
-    const groups = getVisibleNavGroups(ADMIN_SECTIONS, true);
+    const groups = getVisibleNavGroups(SECTIONS);
     const chat = groups.find((g) => g.id === "chat")!;
 
     expect(chat.items.map((s) => s.id)).toEqual([
@@ -62,7 +70,6 @@ describe("getVisibleNavGroups", () => {
   });
 
   it("returns [] for empty input", () => {
-    expect(getVisibleNavGroups([], true)).toEqual([]);
-    expect(getVisibleNavGroups([], false)).toEqual([]);
+    expect(getVisibleNavGroups([])).toEqual([]);
   });
 });

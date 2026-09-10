@@ -24,11 +24,6 @@ vi.mock("@/hooks/useChats", () => ({
   useChatsByCharacter: () => ({ data: [] }),
 }));
 
-vi.mock("@/lib/auth-client", () => ({
-  // Admin role so isDemo is false and the RowActionsMenu (with Delete) renders.
-  authClient: { useSession: () => ({ data: { user: { role: "admin" } } }) },
-}));
-
 vi.mock("@tanstack/react-router", () => ({
   // Route.useParams() is called inside CharacterDetailPage ($id.tsx:48).
   createFileRoute: () => (opts: { component: () => ReactNode }) => ({
@@ -55,7 +50,6 @@ afterEach(cleanup);
 
 const zephyr: CharacterDetail = {
   id: "char-1",
-  userId: "user-1",
   name: "Zephyr",
   data: makeCharacterData({ name: "Zephyr" }),
   spec: "chara_card_v2",

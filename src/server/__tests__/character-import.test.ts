@@ -14,7 +14,7 @@ import {
   listLorebooks,
 } from "@/db/repositories/lorebooks";
 import { DEFAULT_LORE_CONFIG } from "@/lib/st-core/lorebook";
-import { makeTestDb, seedTestUser, type TestDb } from "@/db/__tests__/helpers";
+import { makeTestDb, type TestDb } from "@/db/__tests__/helpers";
 
 vi.mock("@/server/uploads", () => ({
   ensureUploadsDirs: vi.fn(async () => {}),
@@ -160,13 +160,11 @@ describe("parseAndValidateCard", () => {
 
 describe("previewCharacterCard", () => {
   let db: TestDb;
-  let userId: string;
   let ctx: ReturnType<typeof makeTestDb>;
 
   beforeEach(() => {
     ctx = makeTestDb();
     db = ctx.db;
-    userId = seedTestUser(db);
   });
 
   afterEach(() => {
@@ -175,7 +173,7 @@ describe("previewCharacterCard", () => {
 
   it("returns preview with warnings and counts", () => {
     const b64 = makeCard("Zephyr");
-    const result = previewCharacterCard(b64, userId, db);
+    const result = previewCharacterCard(b64, db);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.preview.name).toBe("Zephyr");
@@ -192,7 +190,6 @@ describe("previewCharacterCard", () => {
     createCharacter(
       {
         id: "char-1",
-        userId,
         name: "Zephyr",
         data: {
           name: "Zephyr",
@@ -217,7 +214,7 @@ describe("previewCharacterCard", () => {
     );
 
     const b64 = makeCard("Zephyr");
-    const result = previewCharacterCard(b64, userId, db);
+    const result = previewCharacterCard(b64, db);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.duplicateOf).not.toBeNull();
@@ -249,7 +246,7 @@ describe("previewCharacterCard", () => {
     });
     const png = buildPng([{ keyword: "chara", text: minimalCard }]);
     const b64 = Buffer.from(png).toString("base64");
-    const result = previewCharacterCard(b64, userId, db);
+    const result = previewCharacterCard(b64, db);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.preview.name).toBe("Echo");
@@ -292,13 +289,11 @@ function cardWithData(data: Record<string, unknown>): string {
 
 describe("importCharacterCard with embedded lorebook", () => {
   let db: TestDb;
-  let userId: string;
   let ctx: ReturnType<typeof makeTestDb>;
 
   beforeEach(() => {
     ctx = makeTestDb();
     db = ctx.db;
-    userId = seedTestUser(db);
   });
 
   afterEach(() => {
@@ -306,15 +301,15 @@ describe("importCharacterCard with embedded lorebook", () => {
   });
 
   it("creates a standalone disabled lorebook from the embedded book", async () => {
-    const res = await importCharacterCard(makeCard("Zephyr"), userId, db);
+    const res = await importCharacterCard(makeCard("Zephyr"), db);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.lorebook).not.toBeNull();
     expect(res.lorebook!.name).toBe("Zephyr [embedded]");
     expect(res.lorebook!.entriesInserted).toBe(2);
-    const lb = getLorebook(userId, res.lorebook!.id, db);
+    const lb = getLorebook(res.lorebook!.id, db);
     expect(lb.name).toBe("Zephyr [embedded]");
-    const imported = listLorebooks(userId, db).find((b) => b.id === res.lorebook!.id);
+    const imported = listLorebooks(db).find((b) => b.id === res.lorebook!.id);
     expect(imported?.enabled).toBe(false);
   });
 
@@ -327,33 +322,32 @@ describe("importCharacterCard with embedded lorebook", () => {
         ],
       },
     });
-    const res = await importCharacterCard(b64, userId, db);
+    const res = await importCharacterCard(b64, db);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.lorebook).not.toBeNull();
     expect(res.lorebook!.entriesInserted).toBe(2);
-    expect(listEntries(userId, res.lorebook!.id, db)).toHaveLength(2);
+    expect(listEntries(res.lorebook!.id, db)).toHaveLength(2);
   });
 
   it("skips extraction when a same-named lorebook already exists", async () => {
     createLorebook(
       {
         id: "lb-existing",
-        userId,
         name: "Zephyr [embedded]",
         description: null,
         config: DEFAULT_LORE_CONFIG,
       },
       db,
     );
-    const res = await importCharacterCard(makeCard("Zephyr"), userId, db);
+    const res = await importCharacterCard(makeCard("Zephyr"), db);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.lorebook).toBeNull();
   });
 
   it("returns no lorebook when the card has no embedded book", async () => {
-    const res = await importCharacterCard(cardWithData({}), userId, db);
+    const res = await importCharacterCard(cardWithData({}), db);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.lorebook).toBeNull();
@@ -364,11 +358,11 @@ describe("importCharacterCard with embedded lorebook", () => {
       name: "Mom",
       extensions: { chub: { full_path: "Anonymous/emme-freehold-your-pet-mom-656d8b705cfb" } },
     });
-    const res = await importCharacterCard(b64, userId, db);
+    const res = await importCharacterCard(b64, db);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.character.name).toBe("Emme Freehold Your Pet Mom");
-    const stored = getCharacter(userId, res.character.id, db);
+    const stored = getCharacter(res.character.id, db);
     expect(stored.name).toBe("Emme Freehold Your Pet Mom");
     expect(stored.data.name).toBe("Mom");
   });
@@ -382,12 +376,12 @@ describe("importCharacterCard with embedded lorebook", () => {
         ],
       },
     });
-    const res = await importCharacterCard(b64, userId, db);
+    const res = await importCharacterCard(b64, db);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.lorebook).not.toBeNull();
     expect(res.lorebook!.entriesInserted).toBe(1);
     expect(res.lorebook!.entriesSkipped).toBe(1);
-    expect(listEntries(userId, res.lorebook!.id, db)).toHaveLength(1);
+    expect(listEntries(res.lorebook!.id, db)).toHaveLength(1);
   });
 });
