@@ -11,7 +11,7 @@ import { createLogger } from "@/features/logging";
 const log = createLogger("chat:gen:prompt-context");
 
 export async function loadGenerationContext(
-  userId: string,
+  userId: string, // account FK
   fallbackUserName: string,
   chatId: string,
   assistantMessageLocalId: number,
@@ -19,12 +19,12 @@ export async function loadGenerationContext(
 ): Promise<GenerationContext> {
   log.debug("loadGenerationContext start", { chatId, assistantMessageLocalId });
 
-  const config = await loadChatConfig(userId, chatId, fallbackUserName, db);
+  const config = await loadChatConfig(userId, chatId, fallbackUserName, db); // account FK
   if (!config.provider) throw new Error("No provider configured");
 
   const { chat, character, settings, provider: resolved, persona, loreEntries } = config;
 
-  const messages = getMessages(userId, chatId, db);
+  const messages = getMessages(chatId, db);
   const tree = treeFromNodes(messages);
   const path = getPathToNode(tree, assistantMessageLocalId);
   const chatHistory = path.filter((m) => {

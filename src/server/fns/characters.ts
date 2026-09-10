@@ -14,7 +14,7 @@ import {
   type SearchParams,
 } from "@/db/repositories/characters";
 import type { CharacterDataV2 } from "@/lib/st-core/character";
-import { getSession, isAdmin } from "@/server/session";
+import { getSession } from "@/server/session";
 import { validateId } from "@/server/validators";
 import { diskPathFromStored } from "@/server/uploads";
 import {
@@ -94,23 +94,16 @@ function validateSearchInput(data: unknown): SearchParams {
 export const getCharacter = createServerFn({ method: "GET", strict: { output: false } })
   .validator(validateId)
   .handler(async ({ data }): Promise<CharacterDetail> => {
-    const { user } = await getSession();
-    return repoGetDetail(user.id, data.id);
+    await getSession();
+    return repoGetDetail(data.id);
   });
 
 export const importCharacter = createServerFn({ method: "POST" })
   .validator(validateImportInput)
   .handler(async ({ data }): Promise<ImportResult> => {
-    const { user } = await getSession();
+    await getSession();
 
-    if (!isAdmin(user)) {
-      return {
-        ok: false,
-        error: { kind: "demo_restricted", message: "Demo users cannot import characters." },
-      };
-    }
-
-    return importCharacterCard(data.pngBase64, user.id);
+    return importCharacterCard(data.pngBase64);
   });
 
 export const previewCharacter = createServerFn({ method: "POST" })
@@ -119,33 +112,24 @@ export const previewCharacter = createServerFn({ method: "POST" })
     async ({
       data,
     }): Promise<{ ok: true; data: PreviewResult } | { ok: false; error: ImportError }> => {
-      const { user } = await getSession();
+      await getSession();
 
-      if (!isAdmin(user)) {
-        return {
-          ok: false,
-          error: { kind: "demo_restricted", message: "Demo users cannot import characters." },
-        };
-      }
-
-      return previewCharacterCard(data.pngBase64, user.id);
+      return previewCharacterCard(data.pngBase64);
     },
   );
 
 export const updateCharacter = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateInput)
   .handler(async ({ data }): Promise<Character> => {
-    const { user } = await getSession();
-    if (!isAdmin(user)) throw new Error("Demo users cannot rename characters.");
-    return repoUpdate(user.id, data.id, { name: data.name });
+    await getSession();
+    return repoUpdate(data.id, { name: data.name });
   });
 
 export const updateCharacterData = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateDataInput)
   .handler(async ({ data }): Promise<Character> => {
-    const { user } = await getSession();
-    if (!isAdmin(user)) throw new Error("Demo users cannot edit characters.");
-    return repoUpdate(user.id, data.id, {
+    await getSession();
+    return repoUpdate(data.id, {
       name: data.data.name,
       data: data.data,
       tagline: data.tagline ?? null,
@@ -155,18 +139,17 @@ export const updateCharacterData = createServerFn({ method: "POST", strict: { ou
 export const deleteCharacter = createServerFn({ method: "POST" })
   .validator(validateId)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    if (!isAdmin(user)) throw new Error("Demo users cannot delete characters.");
+    await getSession();
 
     let imagePath: string | null = null;
     try {
-      const char = repoGet(user.id, data.id);
+      const char = repoGet(data.id);
       imagePath = char.imagePath;
     } catch {
       // Character may already be gone; fall through to delete attempt
     }
 
-    repoDelete(user.id, data.id);
+    repoDelete(data.id);
 
     if (imagePath) {
       try {
@@ -180,11 +163,11 @@ export const deleteCharacter = createServerFn({ method: "POST" })
 export const searchCharacters = createServerFn({ method: "GET" })
   .validator(validateSearchInput)
   .handler(async ({ data }) => {
-    const { user } = await getSession();
-    return repoSearchCards(user.id, data);
+    await getSession();
+    return repoSearchCards(data);
   });
 
 export const characterTagCounts = createServerFn({ method: "GET" }).handler(async () => {
-  const { user } = await getSession();
-  return repoTagCounts(user.id);
+  await getSession();
+  return repoTagCounts();
 });

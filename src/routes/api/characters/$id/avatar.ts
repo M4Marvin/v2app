@@ -8,16 +8,15 @@ export const Route = createFileRoute("/api/characters/$id/avatar")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        let user;
         try {
-          user = (await getSession()).user;
+          await getSession();
         } catch {
           return new Response("Unauthorized", { status: 401 });
         }
 
         let character;
         try {
-          character = getCharacter(user.id, params.id);
+          character = getCharacter(params.id);
         } catch {
           return new Response("Character not found", { status: 404 });
         }

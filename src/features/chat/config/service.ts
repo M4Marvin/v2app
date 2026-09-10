@@ -5,13 +5,12 @@ import { getChat } from "../tree/service";
 import { resolveProvider } from "./provider";
 import { resolvePersona } from "./persona";
 import { getEnabledLoreEntries } from "./lorebook";
-import type { ChatConfig, ResolvedProvider, UserSettingsView } from "./types";
+import type { ChatConfig, UserSettingsView } from "./types";
 import { createLogger } from "@/features/logging";
 
 const log = createLogger("chat:config:service");
 
-export function hasProvider(userId: string, db: DB = defaultDb): boolean {
-  const settings = getUserSettings(userId, db);
+export function hasProvider(settings: { defaultProviderId: string | null } | null | undefined): boolean {
   return !!settings?.defaultProviderId;
 }
 
@@ -29,26 +28,20 @@ function toSettingsView(settings: ReturnType<typeof getUserSettings> | null): Us
 }
 
 export async function loadChatConfig(
-  userId: string,
+  userId: string, // account FK
   chatId: string,
   fallbackUserName: string,
   db: DB = defaultDb,
 ): Promise<ChatConfig> {
   log.debug("loadChatConfig start", { chatId });
 
-  const chat = getChat(userId, chatId, db);
-  const char = repoGetCharacter(userId, chat.characterId, db);
-  const settings = toSettingsView(getUserSettings(userId, db));
+  const chat = getChat(chatId, db);
+  const char = repoGetCharacter(chat.characterId, db);
+  const settings = toSettingsView(getUserSettings(userId, db)); // account FK
+  const provider = await resolveProvider(settings, db);
 
-  let provider: ResolvedProvider | null = null;
-  try {
-    provider = await resolveProvider(userId, db);
-  } catch {
-    log.info("loadChatConfig: no provider configured", { chatId });
-  }
-
-  const persona = resolvePersona(userId, fallbackUserName, db);
-  const loreEntries = getEnabledLoreEntries(userId, db);
+  const persona = resolvePersona(userId, fallbackUserName, db); // account FK
+  const loreEntries = getEnabledLoreEntries(db);
 
   log.info("loadChatConfig done", {
     chatId,

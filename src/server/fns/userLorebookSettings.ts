@@ -4,11 +4,9 @@ import { getSession } from "@/server/session";
 import {
   getLorebook as repoGetLorebook,
   listEntries as repoListEntries,
-} from "@/db/repositories/lorebooks";
-import {
   setLorebookEnabled as repoSetLorebookEnabled,
   setLoreEntryDisabled as repoSetLoreEntryDisabled,
-} from "@/db/repositories/userLorebookSettings";
+} from "@/db/repositories/lorebooks";
 
 // ── Validators ──────────────────────────────────────────────────────────────
 
@@ -44,31 +42,29 @@ function validateSetLoreEntryDisabled(data: unknown): {
 
 // ── Server functions ────────────────────────────────────────────────────────
 
-// Both mutations verify lorebook ownership via getLorebook, which throws
-// "Lorebook not found" for wrong-user or missing rows.
+// Both mutations verify the lorebook exists before touching the
+// activation/disable columns; listEntries itself calls getLorebook, which
+// throws "Lorebook not found" for a missing row.
 
 export const setLorebookEnabled = createServerFn({ method: "POST" })
   .validator(validateSetLorebookEnabled)
   .handler(async ({ data }): Promise<{ lorebookId: string; enabled: boolean }> => {
-    const { user } = await getSession();
-    // Ownership check: throws on wrong user / missing.
-    repoGetLorebook(user.id, data.lorebookId);
-    repoSetLorebookEnabled(user.id, data.lorebookId, data.enabled);
+    await getSession();
+    // Existence check: throws on missing lorebook.
+    repoGetLorebook(data.lorebookId);
+    repoSetLorebookEnabled(data.lorebookId, data.enabled);
     return { lorebookId: data.lorebookId, enabled: data.enabled };
   });
 
 export const setLoreEntryDisabled = createServerFn({ method: "POST" })
   .validator(validateSetLoreEntryDisabled)
   .handler(async ({ data }): Promise<{ entryId: string; disabled: boolean }> => {
-    const { user } = await getSession();
-    // Transitive ownership: getLorebook throws on wrong user / missing.
-    repoGetLorebook(user.id, data.lorebookId);
-    // Ensure the entry actually belongs to this lorebook before touching
-    // the overlay row.
-    const entries = repoListEntries(user.id, data.lorebookId);
+    await getSession();
+    // Ensure the entry actually belongs to this lorebook before touching it.
+    const entries = repoListEntries(data.lorebookId);
     if (!entries.some((e) => e.id === data.entryId)) {
       throw new Error("Lore entry not found");
     }
-    repoSetLoreEntryDisabled(user.id, data.entryId, data.disabled);
+    repoSetLoreEntryDisabled(data.entryId, data.disabled);
     return { entryId: data.entryId, disabled: data.disabled };
   });

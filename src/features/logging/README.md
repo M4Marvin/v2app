@@ -90,7 +90,7 @@ Use colon-delimited hierarchy:
 
 ```
 chat:tree          chat:generation    chat:prompt        chat:config
-chat:ui            db:repos           server:auth        server:ratelimit
+chat:ui            db:repos           server:auth
 ```
 
 `createLogger(name)` caches by name, so calling it twice returns the same instance.

@@ -11,15 +11,15 @@ const log = createLogger("chat:tree:lock");
 
 export const STALE_LOCK_MS = 5 * 60 * 1000;
 
-function readLock(userId: string, chatId: string, db: DB): ChatLockState | null {
-  const root = repoGetMessage(userId, chatId, 0, db);
+function readLock(chatId: string, db: DB): ChatLockState | null {
+  const root = repoGetMessage(chatId, 0, db);
   if (!root?.extra) return null;
   if (root.extra.lock !== "generating") return null;
   return root.extra as unknown as ChatLockState;
 }
 
-export function ensureChatIdle(userId: string, chatId: string, db: DB = defaultDb): void {
-  const lock = readLock(userId, chatId, db);
+export function ensureChatIdle(chatId: string, db: DB = defaultDb): void {
+  const lock = readLock(chatId, db);
   if (!lock) return;
 
   const age = Date.now() - lock.lockedAt;
@@ -28,19 +28,18 @@ export function ensureChatIdle(userId: string, chatId: string, db: DB = defaultD
   }
 
   log.warn("Stale lock cleared", { chatId, lockedAt: lock.lockedAt, ageMs: age });
-  repoUpdateMessage(userId, chatId, 0, { extra: null }, db);
+  repoUpdateMessage(chatId, 0, { extra: null }, db);
 }
 
 export function acquireGenerationLock(
-  userId: string,
   chatId: string,
   messageLocalId: number,
   db: DB = defaultDb,
 ): void {
-  const previousLock = readLock(userId, chatId, db);
+  const previousLock = readLock(chatId, db);
   const previousAge = previousLock ? Date.now() - previousLock.lockedAt : null;
 
-  ensureChatIdle(userId, chatId, db);
+  ensureChatIdle(chatId, db);
 
   if (previousLock && previousAge !== null && previousAge > STALE_LOCK_MS) {
     log.warn("Stale lock cleared before acquire", {
@@ -56,19 +55,13 @@ export function acquireGenerationLock(
     messageId: messageLocalId,
     lockedAt: Date.now(),
   };
-  repoUpdateMessage(
-    userId,
-    chatId,
-    0,
-    { extra: lockState as unknown as Record<string, unknown> },
-    db,
-  );
+  repoUpdateMessage(chatId, 0, { extra: lockState as unknown as Record<string, unknown> }, db);
   log.info("Lock acquired", { chatId, messageLocalId });
 }
 
-export function releaseLock(userId: string, chatId: string, db: DB = defaultDb): void {
-  const previousLock = readLock(userId, chatId, db);
-  repoUpdateMessage(userId, chatId, 0, { extra: null }, db);
+export function releaseLock(chatId: string, db: DB = defaultDb): void {
+  const previousLock = readLock(chatId, db);
+  repoUpdateMessage(chatId, 0, { extra: null }, db);
   if (previousLock) {
     log.info("Lock released", { chatId, messageLocalId: previousLock.messageId });
   }

@@ -1,40 +1,67 @@
+import { asc, sql } from "drizzle-orm";
 import { db as defaultDb, type DB } from "@/db";
 import type { ChatCompletionPreset } from "@/lib/chat/types";
 import type { ResolvedProvider } from "./types";
-import { getUserSettings } from "@/db/repositories/userSettings";
-import { getAiProviderWithGlobalFallback } from "@/db/repositories/aiProviders";
+import type { UserSettingsView } from "./types";
+import { aiProviders } from "@/db/schema";
+import { getAiProvider } from "@/db/repositories/aiProviders";
 import { getPreset } from "@/db/repositories/presets";
 import { createLogger } from "@/features/logging";
 
 const log = createLogger("chat:gen:provider");
 
-export async function resolveProvider(
-  userId: string,
-  db: DB = defaultDb,
-): Promise<ResolvedProvider> {
-  log.debug("resolveProvider start", { userId });
+/**
+ * Pick the ai_providers row per the pinned resolution order:
+ * 1. settings.defaultProviderId IF that row exists
+ * 2. else the provider with the earliest created_at (tie-break rowid ASC)
+ * 3. else null
+ * A stale defaultProviderId (deleted provider) falls through to (2)/(3).
+ */
+async function pickProviderRow(
+  settings: UserSettingsView | null,
+  db: DB,
+): Promise<Awaited<ReturnType<typeof getAiProvider>> | null> {
+  if (settings?.defaultProviderId) {
+    try {
+      return await getAiProvider(settings.defaultProviderId, db);
+    } catch {
+      // stale defaultProviderId — fall through to earliest-created
+    }
+  }
+  const first = db
+    .select({ id: aiProviders.id })
+    .from(aiProviders)
+    .orderBy(asc(aiProviders.createdAt), sql`rowid ASC`)
+    .all();
+  if (first.length === 0) return null;
+  return await getAiProvider(first[0].id, db);
+}
 
-  const settings = getUserSettings(userId, db);
-  if (!settings?.defaultProviderId) {
+export async function resolveProvider(
+  settings: UserSettingsView | null,
+  db: DB = defaultDb,
+): Promise<ResolvedProvider | null> {
+  log.debug("resolveProvider start");
+
+  const provider = await pickProviderRow(settings, db);
+  if (!provider) {
     log.info("resolveProvider: no provider configured");
-    throw new Error("No provider configured");
+    return null;
   }
 
-  const provider = await getAiProviderWithGlobalFallback(userId, settings.defaultProviderId, db);
-
-  const model = settings.defaultSelectedModel ?? provider.defaultModel;
+  const model = settings?.defaultSelectedModel ?? provider.defaultModel;
   if (!model) {
     log.error("resolveProvider: no model configured", {
-      settingsModel: settings.defaultSelectedModel,
+      settingsModel: settings?.defaultSelectedModel ?? null,
       providerModel: provider.defaultModel,
     });
     throw new Error("No model configured");
   }
 
   let preset: Partial<ChatCompletionPreset> = {};
-  if (settings.defaultPresetId) {
+  if (settings?.defaultPresetId) {
     try {
-      const dbPreset = getPreset(userId, settings.defaultPresetId, db);
+      const dbPreset = getPreset(settings.defaultPresetId, db);
       const d = dbPreset.data as Record<string, unknown> | null;
       if (d) {
         if (d.systemPrompt !== undefined) preset.systemPrompt = d.systemPrompt as string;

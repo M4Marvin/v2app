@@ -63,26 +63,25 @@ function validateUpdateInput(data: unknown): {
 
 export const listPersonas = createServerFn({ method: "GET" }).handler(
   async (): Promise<PersonaListItem[]> => {
-    const { user } = await getSession();
-    return repoList(user.id);
+    await getSession();
+    return repoList();
   },
 );
 
 export const getPersona = createServerFn({ method: "GET", strict: { output: false } })
   .validator(validateId)
   .handler(async ({ data }): Promise<Persona> => {
-    const { user } = await getSession();
-    return repoGet(user.id, data.id);
+    await getSession();
+    return repoGet(data.id);
   });
 
 export const createPersona = createServerFn({ method: "POST" })
   .validator(validateCreateInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const id = randomUUID();
     const input: CreatePersonaInput = {
       id,
-      userId: user.id,
       name: data.name,
       description: data.description ?? null,
       iconPath: data.iconPath ?? null,
@@ -94,34 +93,34 @@ export const createPersona = createServerFn({ method: "POST" })
 export const updatePersona = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const patch: UpdatePersonaInput = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.description !== undefined) patch.description = data.description;
     if (data.iconPath !== undefined) patch.iconPath = data.iconPath;
-    repoUpdate(user.id, data.id, patch);
+    repoUpdate(data.id, patch);
     return { id: data.id };
   });
 
 export const deletePersona = createServerFn({ method: "POST" })
   .validator(validateId)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    const existing = repoGet(user.id, data.id);
+    await getSession();
+    const existing = repoGet(data.id);
     if (existing.iconPath) {
       try {
         await rm(diskPathFromStored(existing.iconPath), { force: true });
       } catch {}
     }
-    repoDelete(user.id, data.id);
+    repoDelete(data.id);
     return { id: data.id };
   });
 
 export const uploadPersonaIcon = createServerFn({ method: "POST" })
   .validator(UploadPersonaIconInput)
   .handler(async ({ data }): Promise<{ iconPath: string }> => {
-    const { user } = await getSession();
-    const existing = repoGet(user.id, data.id);
+    await getSession();
+    const existing = repoGet(data.id);
     const filename = `${randomUUID()}.png`;
     const storedPath = storedPathFromDiskComponents("personas", filename);
     const diskPath = diskPathFromStored(storedPath);
@@ -137,6 +136,6 @@ export const uploadPersonaIcon = createServerFn({ method: "POST" })
       } catch {}
     }
 
-    repoUpdate(user.id, data.id, { iconPath: storedPath });
+    repoUpdate(data.id, { iconPath: storedPath });
     return { iconPath: storedPath };
   });

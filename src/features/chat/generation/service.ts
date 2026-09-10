@@ -6,6 +6,7 @@ import {
   updateMessage as repoUpdateMessage,
 } from "@/db/repositories/chats";
 import { getCharacter as repoGetCharacter } from "@/db/repositories/characters";
+import { getUserSettings } from "@/db/repositories/userSettings";
 import {
   appendMessage,
   appendUserAndReply,
@@ -25,13 +26,13 @@ import { createLogger } from "@/features/logging";
 const log = createLogger("chat:gen:service");
 
 function loadMacroEnv(
-  userId: string,
+  userId: string, // account FK
   chatId: string,
   fallbackUserName: string,
   db: DB,
 ): { char: string; user: string } {
-  const chat = repoGetChat(userId, chatId, db);
-  const char = repoGetCharacter(userId, chat.characterId, db);
+  const chat = repoGetChat(chatId, db);
+  const char = repoGetCharacter(chat.characterId, db);
   return {
     char: char.data.name,
     user: resolvePersona(userId, fallbackUserName, db).name,
@@ -39,14 +40,14 @@ function loadMacroEnv(
 }
 
 export function prepareStream(
-  userId: string,
+  userId: string, // account FK
   input: PrepareStreamInput,
   userName: string,
   db: DB = defaultDb,
 ): PrepareStreamResult {
   log.debug("prepareStream start", { chatId: input.chatId, mode: input.mode });
 
-  ensureChatIdle(userId, input.chatId, db);
+  ensureChatIdle(input.chatId, db);
 
   if (input.mode === "send") {
     const content = input.content?.trim() ?? "";
@@ -55,10 +56,10 @@ export function prepareStream(
     const macroEnv = loadMacroEnv(userId, input.chatId, userName, db);
     const userContent = substituteMessageMacros(content, macroEnv);
 
-    if (!hasProvider(userId, db)) {
+    const settings = getUserSettings(userId, db); // account FK
+    if (!hasProvider(settings)) {
       const reply = substituteMessageMacros(pickDefaultReply(), macroEnv);
       const { replyMessage } = appendUserAndReply(
-        userId,
         input.chatId,
         userContent,
         reply,
@@ -72,14 +73,13 @@ export function prepareStream(
     }
 
     const { replyMessage } = appendUserAndReply(
-      userId,
       input.chatId,
       userContent,
       "",
       { isStreaming: true },
       db,
     );
-    acquireGenerationLock(userId, input.chatId, replyMessage.localId, db);
+    acquireGenerationLock(input.chatId, replyMessage.localId, db);
     log.info("prepareStream: stream mode", { assistantMessageLocalId: replyMessage.localId });
     return { mode: "stream", assistantMessageLocalId: replyMessage.localId };
   }
@@ -88,7 +88,7 @@ export function prepareStream(
     const targetId = input.messageLocalId ?? 0;
     if (targetId === 0) throw new Error("Cannot regenerate the root message");
 
-    const tree = treeFromNodes(getMessages(userId, input.chatId, db));
+    const tree = treeFromNodes(getMessages(input.chatId, db));
     const target = getNode(tree, targetId);
     if (!target) throw new Error("Message not found");
     if (target.role !== "assistant") throw new Error("Can only regenerate assistant messages");
@@ -98,18 +98,17 @@ export function prepareStream(
     }
 
     const sibling = appendSibling(
-      userId,
       input.chatId,
       targetId,
       { role: "assistant", content: "", extra: { isStreaming: true } },
       db,
     );
-    acquireGenerationLock(userId, input.chatId, sibling.localId, db);
+    acquireGenerationLock(input.chatId, sibling.localId, db);
     return { mode: "stream", assistantMessageLocalId: sibling.localId };
   }
 
   // mode === "continue"
-  const tree = treeFromNodes(getMessages(userId, input.chatId, db));
+  const tree = treeFromNodes(getMessages(input.chatId, db));
   const activeLeafId = getActiveLeafId(tree);
   if (activeLeafId === null) throw new Error("No active message to continue from");
   const leaf = getNode(tree, activeLeafId);
@@ -119,12 +118,11 @@ export function prepareStream(
 
   if (leaf.role === "user") {
     const node = appendMessage(
-      userId,
       input.chatId,
       { role: "assistant", content: "", extra: { isStreaming: true } },
       db,
     );
-    acquireGenerationLock(userId, input.chatId, node.localId, db);
+    acquireGenerationLock(input.chatId, node.localId, db);
     return { mode: "stream", assistantMessageLocalId: node.localId };
   }
 
@@ -132,18 +130,17 @@ export function prepareStream(
     throw new Error("Cannot continue from a message that is still streaming");
   }
   const sibling = appendSibling(
-    userId,
     input.chatId,
     activeLeafId,
     { role: "assistant", content: "", extra: { isStreaming: true } },
     db,
   );
-  acquireGenerationLock(userId, input.chatId, sibling.localId, db);
+  acquireGenerationLock(input.chatId, sibling.localId, db);
   return { mode: "stream", assistantMessageLocalId: sibling.localId };
 }
 
 export function finalizeStream(
-  userId: string,
+  userId: string, // account FK
   chatId: string,
   messageLocalId: number,
   content: string,
@@ -153,7 +150,7 @@ export function finalizeStream(
   log.debug("finalizeStream start", { chatId, messageLocalId });
   if (messageLocalId === 0) throw new Error("Cannot finalize the root message");
 
-  const existing = repoGetMessage(userId, chatId, messageLocalId, db);
+  const existing = repoGetMessage(chatId, messageLocalId, db);
   if (!existing) throw new Error("Message not found");
   if ((existing.extra?.isStreaming ?? false) !== true) {
     throw new Error("Message is not a streaming placeholder");
@@ -162,14 +159,13 @@ export function finalizeStream(
   const macroEnv = loadMacroEnv(userId, chatId, userName, db);
   const finalContent = substituteMessageMacros(content, macroEnv);
 
-  repoUpdateMessage(userId, chatId, messageLocalId, { content: finalContent, extra: null }, db);
-  releaseLock(userId, chatId, db);
+  repoUpdateMessage(chatId, messageLocalId, { content: finalContent, extra: null }, db);
+  releaseLock(chatId, db);
   log.info("finalizeStream done", { messageLocalId, contentLen: finalContent.length });
   return { messageLocalId, content: finalContent };
 }
 
 export function cancelStream(
-  userId: string,
   chatId: string,
   messageLocalId: number,
   db: DB = defaultDb,
@@ -179,7 +175,7 @@ export function cancelStream(
 
   let deletedIds: number[] = [];
   try {
-    const result = deleteBranch(userId, chatId, messageLocalId, db, { skipIdleCheck: true });
+    const result = deleteBranch(chatId, messageLocalId, db, { skipIdleCheck: true });
     deletedIds = result.deletedIds;
   } catch (err) {
     log.warn("cancelStream: deleteBranch failed, releasing lock anyway", {
@@ -188,7 +184,7 @@ export function cancelStream(
       error: (err as Error).message,
     });
   }
-  releaseLock(userId, chatId, db);
+  releaseLock(chatId, db);
   log.info("cancelStream done", { messageLocalId, deletedCount: deletedIds.length });
   return { deletedIds };
 }

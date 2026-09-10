@@ -18,7 +18,7 @@ export interface ImagePromptOptions {
 }
 
 export async function generateImagePrompt(
-  userId: string,
+  userId: string, // account FK
   chatId: string,
   userName: string,
   options?: ImagePromptOptions,
@@ -27,12 +27,12 @@ export async function generateImagePrompt(
   log.debug("generateImagePrompt start", { chatId });
   const fetchFn = options?.fetchFn ?? globalThis.fetch;
 
-  const messages = getMessages(userId, chatId, db);
+  const messages = getMessages(chatId, db);
   const tree = treeFromNodes(messages);
   const activeLeafId = getActiveLeafId(tree);
   if (activeLeafId === null) throw new Error("No active message");
 
-  const config = await loadChatConfig(userId, chatId, userName, db);
+  const config = await loadChatConfig(userId, chatId, userName, db); // account FK
   if (!config.provider) throw new Error("No provider configured");
 
   const { chat, character, settings, provider } = config;

@@ -32,7 +32,7 @@ function resolveUserName(user: { id: string; name: string }): string {
     const settings = repoGetUserSettings(user.id);
     if (settings?.defaultPersonaId) {
       try {
-        return repoGetPersona(user.id, settings.defaultPersonaId).name;
+        return repoGetPersona(settings.defaultPersonaId).name;
       } catch {
         // Persona deleted — fall through to user.name
       }
@@ -67,8 +67,8 @@ export type ChatDetail = {
 
 export const listChats = createServerFn({ method: "GET", strict: { output: false } }).handler(
   async (): Promise<ChatListItem[]> => {
-    const { user } = await getSession();
-    return repoListChats(user.id);
+    await getSession();
+    return repoListChats();
   },
 );
 
@@ -78,16 +78,16 @@ export const listChatsByCharacter = createServerFn({
 })
   .validator((data) => Schema.decodeUnknownSync(GetChat)(data))
   .handler(async ({ data }): Promise<ChatListItem[]> => {
-    const { user } = await getSession();
-    return repoListChatsByCharacter(user.id, data.id);
+    await getSession();
+    return repoListChatsByCharacter(data.id);
   });
 
 export const getChat = createServerFn({ method: "GET", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(GetChat)(data))
   .handler(async ({ data }): Promise<ChatDetail> => {
-    const { user } = await getSession();
-    const chat = repoGetChat(user.id, data.id);
-    const char = repoGetChar(user.id, chat.characterId);
+    await getSession();
+    const chat = repoGetChat(data.id);
+    const char = repoGetChar(chat.characterId);
     return {
       id: chat.id,
       characterId: chat.characterId,
@@ -110,20 +110,19 @@ export const getChat = createServerFn({ method: "GET", strict: { output: false }
 export const getChatMessages = createServerFn({ method: "GET", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(GetChatMessages)(data))
   .handler(async ({ data }): Promise<ChatMessageRow[]> => {
-    const { user } = await getSession();
-    return repoListMessages(user.id, data.id);
+    await getSession();
+    return repoListMessages(data.id);
   });
 
 export const createChat = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(CreateChat)(data))
   .handler(async ({ data }): Promise<ChatDetail> => {
     const { user } = await getSession();
-    const char: Character = repoGetChar(user.id, data.characterId);
+    const char: Character = repoGetChar(data.characterId);
 
     const chatId = randomUUID();
     const chat = repoCreateChat({
       id: chatId,
-      userId: user.id,
       characterId: data.characterId,
       title: char.data.name,
       characterDescription: char.data.description,
@@ -143,7 +142,7 @@ export const createChat = createServerFn({ method: "POST", strict: { output: fal
 
     // Insert hidden system root (localId=0). It is never rendered, swiped,
     // edited, or deleted — all other server fns reject messageLocalId === 0.
-    repoInsertMessage(user.id, chatId, {
+    repoInsertMessage(chatId, {
       chatId,
       localId: 0,
       parentLocalId: null,
@@ -158,7 +157,7 @@ export const createChat = createServerFn({ method: "POST", strict: { output: fal
     const macroEnv = { char: char.data.name, user: resolveUserName(user) };
     greetingTexts.forEach((text, i) => {
       const localId = i + 1;
-      repoInsertMessage(user.id, chatId, {
+      repoInsertMessage(chatId, {
         chatId,
         localId,
         parentLocalId: 0,
@@ -192,8 +191,8 @@ export const createChat = createServerFn({ method: "POST", strict: { output: fal
 export const updateChatSettings = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(UpdateChatSettings)(data))
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    const patch: Parameters<typeof repoUpdateChat>[2] = {};
+    await getSession();
+    const patch: Parameters<typeof repoUpdateChat>[1] = {};
     if (data.title !== undefined) patch.title = data.title ?? "";
     if (data.characterDescription !== undefined)
       patch.characterDescription = data.characterDescription ?? "";
@@ -204,14 +203,14 @@ export const updateChatSettings = createServerFn({ method: "POST", strict: { out
     if (data.characterSystemPrompt !== undefined)
       patch.characterSystemPrompt = data.characterSystemPrompt ?? "";
     if (data.backgroundId !== undefined) patch.backgroundId = data.backgroundId;
-    repoUpdateChat(user.id, data.id, patch);
+    repoUpdateChat(data.id, patch);
     return { id: data.id };
   });
 
 export const deleteChat = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(DeleteChat)(data))
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    repoDeleteChat(user.id, data.id);
+    await getSession();
+    repoDeleteChat(data.id);
     return { id: data.id };
   });
