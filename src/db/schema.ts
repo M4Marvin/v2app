@@ -91,9 +91,7 @@ export const verification = sqliteTable("verification", {
     .$defaultFn(() => new Date()),
 });
 
-// ── Domain tables (user-scoped) ──────────────────────────────────────────────
-// All domain tables reference user.id with onDelete: 'cascade'. Belongs-to
-// relations cascade too (character → chats, lorebook → entries, chat → messages).
+// ── Domain tables (single-user) ──────────────────────────────────────────────
 
 export const characters = sqliteTable(
   "characters",
@@ -101,9 +99,6 @@ export const characters = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     data: text("data", { mode: "json" }).$type<CharacterDataV2>().notNull(),
     spec: text("spec").notNull().default("chara_card_v2"),
@@ -124,9 +119,8 @@ export const characters = sqliteTable(
       .$defaultFn(() => new Date()),
   },
   (table) => [
-    index("characters_user_id_idx").on(table.userId),
-    index("characters_user_updated_idx").on(table.userId, table.updatedAt),
-    index("characters_user_name_idx").on(table.userId, table.name),
+    index("characters_updated_idx").on(table.updatedAt),
+    index("characters_name_idx").on(table.name),
   ],
 );
 
@@ -136,9 +130,6 @@ export const lorebooks = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
     config: text("config", { mode: "json" }).$type<LoreConfig>().notNull(),
@@ -148,8 +139,8 @@ export const lorebooks = sqliteTable(
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),
+    enabled: integer("enabled").notNull().default(0),
   },
-  (table) => [index("lorebooks_user_id_idx").on(table.userId)],
 );
 
 export const loreEntries = sqliteTable(
@@ -169,59 +160,11 @@ export const loreEntries = sqliteTable(
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),
+    userDisabled: integer("user_disabled").notNull().default(0),
   },
   (table) => [
     index("lore_entries_lorebook_id_idx").on(table.lorebookId),
     uniqueIndex("lore_entries_lorebook_uid_uq").on(table.lorebookId, table.uid),
-  ],
-);
-
-// Per-user lorebook activation overlay. Presence = enabled. Opt-in: no row
-// means the lorebook is disabled for this user.
-export const userLorebookSettings = sqliteTable(
-  "user_lorebook_settings",
-  {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    lorebookId: text("lorebook_id")
-      .notNull()
-      .references(() => lorebooks.id, { onDelete: "cascade" }),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-  },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.lorebookId] }),
-    index("user_lorebook_settings_user_id_idx").on(table.userId),
-  ],
-);
-
-// Per-user entry disable overlay. Presence = user-disabled. AND semantics
-// with the entry's own data.disable: entry is active iff !data.disable
-// && !userOverlay.
-export const userLoreEntrySettings = sqliteTable(
-  "user_lore_entry_settings",
-  {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    entryId: text("entry_id")
-      .notNull()
-      .references(() => loreEntries.id, { onDelete: "cascade" }),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-  },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.entryId] }),
-    index("user_lore_entry_settings_user_id_idx").on(table.userId),
   ],
 );
 
@@ -231,9 +174,6 @@ export const chats = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
@@ -251,7 +191,6 @@ export const chats = sqliteTable(
       .$defaultFn(() => new Date()),
   },
   (table) => [
-    index("chats_user_id_idx").on(table.userId),
     index("chats_character_id_idx").on(table.characterId),
   ],
 );
@@ -296,7 +235,6 @@ export const aiProviders = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     baseUrl: text("base_url").notNull(),
     apiKey: text("api_key").notNull(),
@@ -310,8 +248,7 @@ export const aiProviders = sqliteTable(
       .$defaultFn(() => new Date()),
   },
   (table) => [
-    index("ai_providers_user_id_idx").on(table.userId),
-    uniqueIndex("ai_providers_user_name_uq").on(table.userId, table.name),
+    uniqueIndex("ai_providers_name_uq").on(table.name),
   ],
 );
 
@@ -321,9 +258,6 @@ export const presets = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     providerId: text("provider_id").references(() => aiProviders.id, {
       onDelete: "set null",
@@ -338,9 +272,8 @@ export const presets = sqliteTable(
       .$defaultFn(() => new Date()),
   },
   (table) => [
-    index("presets_user_id_idx").on(table.userId),
     index("presets_provider_id_idx").on(table.providerId),
-    uniqueIndex("presets_user_name_uq").on(table.userId, table.name),
+    uniqueIndex("presets_name_uq").on(table.name),
   ],
 );
 
@@ -350,9 +283,6 @@ export const personas = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
     iconPath: text("icon_path"),
@@ -363,7 +293,6 @@ export const personas = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (table) => [index("personas_user_id_idx").on(table.userId)],
 );
 
 // One row per user; stores the AI defaults to seed new chats with, plus
@@ -397,29 +326,12 @@ export const userSettings = sqliteTable("user_settings", {
     .$defaultFn(() => new Date()),
 });
 
-export const userDailyUsage = sqliteTable(
-  "user_daily_usage",
-  {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    day: text("day").notNull(), // "YYYY-MM-DD" UTC
-    count: integer("count").notNull().default(0),
-  },
-  (t) => [primaryKey({ columns: [t.userId, t.day] })],
-);
-
 // ── Relations ────────────────────────────────────────────────────────────────
 // Optional but useful for typed `with: { ... }` joins. Kept minimal here.
 
 export const usersRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
-  characters: many(characters),
-  lorebooks: many(lorebooks),
-  chats: many(chats),
-  presets: many(presets),
-  personas: many(personas),
   settings: one(userSettings, { fields: [user.id], references: [userSettings.userId] }),
 }));
 
@@ -431,27 +343,22 @@ export const accountsRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
-export const charactersRelations = relations(characters, ({ one, many }) => ({
-  user: one(user, { fields: [characters.userId], references: [user.id] }),
+export const charactersRelations = relations(characters, ({ many }) => ({
   chats: many(chats),
 }));
 
-export const lorebooksRelations = relations(lorebooks, ({ one, many }) => ({
-  user: one(user, { fields: [lorebooks.userId], references: [user.id] }),
+export const lorebooksRelations = relations(lorebooks, ({ many }) => ({
   entries: many(loreEntries),
-  userSettings: many(userLorebookSettings),
 }));
 
-export const loreEntriesRelations = relations(loreEntries, ({ one, many }) => ({
+export const loreEntriesRelations = relations(loreEntries, ({ one }) => ({
   lorebook: one(lorebooks, {
     fields: [loreEntries.lorebookId],
     references: [lorebooks.id],
   }),
-  userSettings: many(userLoreEntrySettings),
 }));
 
 export const chatsRelations = relations(chats, ({ one, many }) => ({
-  user: one(user, { fields: [chats.userId], references: [user.id] }),
   character: one(characters, {
     fields: [chats.characterId],
     references: [characters.id],
@@ -467,20 +374,14 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
 }));
 
 export const presetsRelations = relations(presets, ({ one }) => ({
-  user: one(user, { fields: [presets.userId], references: [user.id] }),
   provider: one(aiProviders, {
     fields: [presets.providerId],
     references: [aiProviders.id],
   }),
 }));
 
-export const aiProvidersRelations = relations(aiProviders, ({ one, many }) => ({
-  user: one(user, { fields: [aiProviders.userId], references: [user.id] }),
+export const aiProvidersRelations = relations(aiProviders, ({ many }) => ({
   presets: many(presets),
-}));
-
-export const personasRelations = relations(personas, ({ one }) => ({
-  user: one(user, { fields: [personas.userId], references: [user.id] }),
 }));
 
 export const userSettingsRelations = relations(userSettings, ({ one }) => ({
@@ -509,10 +410,6 @@ export type Lorebook = typeof lorebooks.$inferSelect;
 export type NewLorebook = typeof lorebooks.$inferInsert;
 export type LoreEntry = typeof loreEntries.$inferSelect;
 export type NewLoreEntry = typeof loreEntries.$inferInsert;
-export type UserLorebookSettings = typeof userLorebookSettings.$inferSelect;
-export type NewUserLorebookSettings = typeof userLorebookSettings.$inferInsert;
-export type UserLoreEntrySettings = typeof userLoreEntrySettings.$inferSelect;
-export type NewUserLoreEntrySettings = typeof userLoreEntrySettings.$inferInsert;
 export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
 export type ChatMessageRow = typeof chatMessages.$inferSelect;
@@ -527,4 +424,3 @@ export type NewUserSettings = typeof userSettings.$inferInsert;
 export type NewAiProvider = typeof aiProviders.$inferInsert;
 export type Background = typeof backgrounds.$inferSelect;
 export type NewBackground = typeof backgrounds.$inferInsert;
-export type UserDailyUsage = typeof userDailyUsage.$inferSelect;
