@@ -1,12 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getSession } from "@/lib/auth.functions";
+import { createFileRoute } from "@tanstack/react-router";
 import { ProviderManager } from "@/components/ai/ProviderManager";
 
 export const Route = createFileRoute("/settings/providers")({
-  beforeLoad: async () => {
-    const session = await getSession();
-    if (!session || session.user.role !== "admin") throw redirect({ to: "/settings/preferences" });
-  },
   component: ProvidersPage,
 });
 

@@ -4,7 +4,6 @@ import { SectionHeader } from "../section-header";
 interface SectionProps {
   chatId: string;
   isStreaming: boolean;
-  isAdmin: boolean;
   onNavigate: (sectionId: string) => void;
 }
 

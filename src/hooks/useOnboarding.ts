@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  claimAdmin,
   completeOnboarding,
   getOnboardingStatus,
   type OnboardingStatus,
@@ -14,16 +13,6 @@ export function useOnboardingStatus() {
   return useQuery({
     queryKey: onboardingKeys.status,
     queryFn: () => getOnboardingStatus(),
-  });
-}
-
-export function useClaimAdmin() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => claimAdmin(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: onboardingKeys.status });
-    },
   });
 }
 

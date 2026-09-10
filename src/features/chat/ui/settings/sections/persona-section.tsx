@@ -34,7 +34,6 @@ import { SectionHeader } from "../section-header";
 interface SectionProps {
   chatId: string;
   isStreaming: boolean;
-  isAdmin: boolean;
 }
 
 export function PersonaSection(_props: SectionProps) {

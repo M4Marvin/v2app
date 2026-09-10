@@ -6,11 +6,9 @@ import { previewCharacter } from "@/server/fns/characters";
 
 export function CharacterStep({
   hasCharacter,
-  isAdmin,
   onImported,
 }: {
   hasCharacter: boolean;
-  isAdmin: boolean;
   onImported: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,31 +68,24 @@ export function CharacterStep({
         </p>
       )}
 
-      {isAdmin ? (
-        <div className="grid gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png"
-            className="hidden"
-            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={processing || importMutation.isPending}
-          >
-            {processing || importMutation.isPending ? "Importing..." : "Import a character (PNG)"}
-          </Button>
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-        </div>
-      ) : (
-        <p className="text-sm text-2">
-          Character import needs an admin account. Claim admin in the previous step, or import later
-          from the Characters page.
-        </p>
-      )}
+      <div className="grid gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png"
+          className="hidden"
+          onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={processing || importMutation.isPending}
+        >
+          {processing || importMutation.isPending ? "Importing..." : "Import a character (PNG)"}
+        </Button>
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+      </div>
     </div>
   );
 }

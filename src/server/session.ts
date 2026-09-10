@@ -7,18 +7,11 @@ async function bootstrap() {
   if (didBootstrap) return;
   didBootstrap = true;
   try {
-    const { ensureGlobalProvider } = await import("@/server/bootstrap");
-    await ensureGlobalProvider();
+    const { ensureStartupTasks } = await import("@/server/bootstrap");
+    await ensureStartupTasks();
   } catch (e) {
     console.error("[bootstrap] failed:", e);
   }
-}
-
-/**
- * Returns true if the user has admin role.
- */
-export function isAdmin(user: { role?: string | null }): boolean {
-  return user.role === "admin";
 }
 
 /**

@@ -80,26 +80,25 @@ function validateUpdateInput(data: unknown): {
 
 export const listPresets = createServerFn({ method: "GET", strict: { output: false } }).handler(
   async (): Promise<PresetListItem[]> => {
-    const { user } = await getSession();
-    return repoList(user.id);
+    await getSession();
+    return repoList();
   },
 );
 
 export const getPreset = createServerFn({ method: "GET", strict: { output: false } })
   .validator(validateId)
   .handler(async ({ data }): Promise<Preset> => {
-    const { user } = await getSession();
-    return repoGet(user.id, data.id);
+    await getSession();
+    return repoGet(data.id);
   });
 
 export const createPreset = createServerFn({ method: "POST" })
   .validator(validateCreateInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const id = randomUUID();
     const input: CreatePresetInput = {
       id,
-      userId: user.id,
       name: data.name,
       providerId: data.providerId ?? null,
       model: data.model ?? null,
@@ -112,20 +111,20 @@ export const createPreset = createServerFn({ method: "POST" })
 export const updatePreset = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const patch: UpdatePresetInput = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.providerId !== undefined) patch.providerId = data.providerId;
     if (data.model !== undefined) patch.model = data.model;
     if (data.data !== undefined) patch.data = data.data;
-    repoUpdate(user.id, data.id, patch);
+    repoUpdate(data.id, patch);
     return { id: data.id };
   });
 
 export const deletePreset = createServerFn({ method: "POST" })
   .validator(validateId)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    repoDelete(user.id, data.id);
+    await getSession();
+    repoDelete(data.id);
     return { id: data.id };
   });

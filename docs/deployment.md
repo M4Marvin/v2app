@@ -8,7 +8,7 @@ This replaces the old `public/data/` static-serving approach, which failed in Do
 
 ### Docker persistence
 
-The `v2app-data:/app/data` volume in `docker-compose.yml` covers `/app/data/`, which includes the SQLite DB (`/app/data/local.db`) and all uploaded images (`/app/data/uploads/`). No additional volume is needed.
+The `charon-data:/app/data` volume in `docker-compose.yml` covers `/app/data/`, which includes the SQLite DB (`/app/data/local.db`) and all uploaded images (`/app/data/uploads/`). No additional volume is needed.
 
 ### Migration
 

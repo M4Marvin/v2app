@@ -28,7 +28,6 @@ import {
   useCharacterTagCounts,
   useDeleteCharacter,
 } from "@/hooks/useCharacters";
-import { authClient } from "@/lib/auth-client";
 import { RelativeTime } from "@/components/common/RelativeTime";
 import type { CharacterListItem } from "@/server/fns/characters";
 
@@ -69,8 +68,6 @@ function getCardHeight(lanes: number, vw: number): number {
 }
 
 function CharactersPage() {
-  const { data: session } = authClient.useSession();
-  const isDemo = session?.user?.role !== "admin";
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
   const deleteMutation = useDeleteCharacter();
@@ -209,14 +206,12 @@ function CharactersPage() {
               : "Import and manage your character cards."
         }
         actions={
-          !isDemo ? (
-            <Button asChild>
-              <Link to="/characters/new">
-                <Plus className="size-4 md:hidden" data-icon="inline-start" />
-                <span className="hidden md:inline">Import PNG</span>
-              </Link>
-            </Button>
-          ) : undefined
+          <Button asChild>
+            <Link to="/characters/new">
+              <Plus className="size-4 md:hidden" data-icon="inline-start" />
+              <span className="hidden md:inline">Import PNG</span>
+            </Link>
+          </Button>
         }
       />
 
@@ -235,11 +230,9 @@ function CharactersPage() {
           title="No characters yet"
           description="Import a PNG character card to get started."
         >
-          {!isDemo ? (
-            <Button asChild>
-              <Link to="/characters/new">Import PNG</Link>
-            </Button>
-          ) : null}
+          <Button asChild>
+            <Link to="/characters/new">Import PNG</Link>
+          </Button>
         </EmptyState>
       ) : (
         <>
@@ -357,7 +350,6 @@ function CharactersPage() {
                   >
                     <CharacterCard
                       character={char}
-                      isDemo={isDemo}
                       bodyHeight={bodyHeight}
                       onDelete={() => setDeletingId(char.id)}
                     />
@@ -397,12 +389,10 @@ function CharactersPage() {
 
 function CharacterCard({
   character,
-  isDemo,
   bodyHeight,
   onDelete,
 }: {
   character: CharacterListItem;
-  isDemo: boolean;
   bodyHeight: number;
   onDelete: () => void;
 }) {
@@ -491,25 +481,23 @@ function CharacterCard({
         </div>
       </Link>
 
-      {!isDemo ? (
-        <div className="absolute top-2 right-2">
-          <RowActionsMenu
-            label={`Actions for ${character.name}`}
-            items={[
-              {
-                label: "Edit",
-                onSelect: () =>
-                  void navigate({ to: "/characters/$id/edit", params: { id: character.id } }),
-              },
-              {
-                label: "Delete",
-                destructive: true,
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        </div>
-      ) : null}
+      <div className="absolute top-2 right-2">
+        <RowActionsMenu
+          label={`Actions for ${character.name}`}
+          items={[
+            {
+              label: "Edit",
+              onSelect: () =>
+                void navigate({ to: "/characters/$id/edit", params: { id: character.id } }),
+            },
+            {
+              label: "Delete",
+              destructive: true,
+              onSelect: onDelete,
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 }

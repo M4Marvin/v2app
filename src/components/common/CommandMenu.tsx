@@ -11,11 +11,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 
-interface CommandMenuProps {
-  isAdmin: boolean;
-}
-
-export function CommandMenu({ isAdmin }: CommandMenuProps) {
+export function CommandMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -84,33 +80,29 @@ export function CommandMenu({ isAdmin }: CommandMenuProps) {
             Settings
           </CommandItem>
         </CommandGroup>
-        {isAdmin ? (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="Create">
-              <CommandItem
-                value="import character"
-                onSelect={() => {
-                  setOpen(false);
-                  void navigate({ to: "/characters/new" });
-                }}
-              >
-                <Upload />
-                Import character
-              </CommandItem>
-              <CommandItem
-                value="new lorebook"
-                onSelect={() => {
-                  setOpen(false);
-                  void navigate({ to: "/lorebooks/new" });
-                }}
-              >
-                <CirclePlus />
-                New lorebook
-              </CommandItem>
-            </CommandGroup>
-          </>
-        ) : null}
+        <CommandSeparator />
+        <CommandGroup heading="Create">
+          <CommandItem
+            value="import character"
+            onSelect={() => {
+              setOpen(false);
+              void navigate({ to: "/characters/new" });
+            }}
+          >
+            <Upload />
+            Import character
+          </CommandItem>
+          <CommandItem
+            value="new lorebook"
+            onSelect={() => {
+              setOpen(false);
+              void navigate({ to: "/lorebooks/new" });
+            }}
+          >
+            <CirclePlus />
+            New lorebook
+          </CommandItem>
+        </CommandGroup>
       </CommandList>
     </CommandDialog>
   );

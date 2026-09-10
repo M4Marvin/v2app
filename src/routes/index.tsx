@@ -48,7 +48,7 @@ function LandingPage() {
         </p>
         <div className="flex items-center justify-center gap-4">
           <Button asChild size="lg">
-            <Link to="/signup">Get Started</Link>
+            <Link to="/setup">Get Started</Link>
           </Button>
           <Button asChild variant="ghost" size="lg">
             <Link to="/signin">Sign in</Link>

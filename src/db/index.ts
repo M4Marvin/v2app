@@ -8,7 +8,13 @@ export const db = new Proxy<BetterSQLite3Database<typeof schema>>({} as any, {
   get(_, p) {
     if (!_db) {
       _db = drizzle(process.env.DATABASE_URL!, { schema });
-      migrate(_db, { migrationsFolder: "./drizzle" });
+      const client = (_db as unknown as { $client: import("better-sqlite3").Database }).$client;
+      client.pragma("foreign_keys = OFF");
+      try {
+        migrate(_db, { migrationsFolder: "./drizzle" });
+      } finally {
+        client.pragma("foreign_keys = ON");
+      }
     }
     const v = Reflect.get(_db, p, _db);
     return typeof v === "function" ? v.bind(_db) : v;

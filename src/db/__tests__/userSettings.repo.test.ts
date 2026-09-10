@@ -3,12 +3,11 @@ import { makeTestDb, seedTestUser, type TestDb } from "./helpers";
 import { aiProviders, personas, presets } from "@/db/schema";
 import { getUserSettings, upsertUserSettings } from "@/db/repositories/userSettings";
 
-function seedProvider(db: TestDb, userId: string, id = "prov-1") {
+function seedProvider(db: TestDb, id = "prov-1") {
   const now = new Date();
   db.insert(aiProviders)
     .values({
       id,
-      userId,
       name: "Test Provider",
       baseUrl: "https://example.com/v1",
       apiKey: "test-key",
@@ -18,12 +17,11 @@ function seedProvider(db: TestDb, userId: string, id = "prov-1") {
     .run();
 }
 
-function seedPreset(db: TestDb, userId: string, id = "preset-1") {
+function seedPreset(db: TestDb, id = "preset-1") {
   const now = new Date();
   db.insert(presets)
     .values({
       id,
-      userId,
       name: "Test Preset",
       data: {},
       createdAt: now,
@@ -32,12 +30,11 @@ function seedPreset(db: TestDb, userId: string, id = "preset-1") {
     .run();
 }
 
-function seedPersona(db: TestDb, userId: string, id = "persona-1") {
+function seedPersona(db: TestDb, id = "persona-1") {
   const now = new Date();
   db.insert(personas)
     .values({
       id,
-      userId,
       name: "Test Persona",
       createdAt: now,
       updatedAt: now,
@@ -55,9 +52,9 @@ describe("userSettings repo", () => {
     ctx = makeTestDb();
     db = ctx.db;
     userId = seedTestUser(db);
-    seedProvider(db, userId);
-    seedPreset(db, userId);
-    seedPersona(db, userId);
+    seedProvider(db);
+    seedPreset(db);
+    seedPersona(db);
   });
 
   afterEach(() => {

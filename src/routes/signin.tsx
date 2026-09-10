@@ -90,7 +90,7 @@ function SigninPage() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         type="text"
-                        placeholder="demo"
+                        placeholder="username"
                         autoComplete="username"
                         minLength={1}
                         aria-invalid={isInvalid}
@@ -150,7 +150,7 @@ function SigninPage() {
                     <p className="text-center text-sm text-2">
                       Don&apos;t have an account?{" "}
                       <Link
-                        to="/signup"
+                        to="/setup"
                         className="text-brand hover:text-brand-strong underline underline-offset-4"
                       >
                         Sign up

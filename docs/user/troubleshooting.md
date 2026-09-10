@@ -18,11 +18,7 @@ A: Run **Test connection** first. Charon fetches the model list from the provide
 
 **Q: I forgot my password.**
 
-A: There is no self-service reset. Your data lives in a local SQLite file on your machine. You, or someone with access to the machine, can reset the password through the terminal. Keep a copy of your password somewhere safe.
-
-**Q: Import and provider options are missing.**
-
-A: Your account hasn't claimed admin yet. Open the onboarding wizard from **Settings** → **Onboarding** and use the "Make me the admin" step (available when no admin exists yet). As a fallback, open a terminal in the Charon folder and run `pnpm create-admin --username <your-username>` to promote your account, then sign out and back in. See [getting-started.md](getting-started.md).
+A: If you're still signed in, change it under **Settings** → **Profile**. If you're locked out, the account was created on first run and can't be re-created through the UI. As a last resort, stop Charon, delete the `dev.db` file, and start again to redo the first-run setup. That erases all data, so back it up first. See [getting-started.md](getting-started.md).
 
 **Q: A character card won't import.**
 

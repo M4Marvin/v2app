@@ -33,11 +33,6 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children?: ReactNode }) => <a>{children}</a>,
 }));
 
-vi.mock("@/lib/auth-client", () => ({
-  // Admin role so the demo-redirect effect (new.tsx:23-25) never fires.
-  authClient: { useSession: () => ({ data: { user: { role: "admin" } } }) },
-}));
-
 import { NewCharacterPage } from "./new";
 
 // No vitest setup file / globals in this repo, so RTL auto-cleanup never runs.

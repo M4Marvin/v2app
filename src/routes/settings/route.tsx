@@ -1,5 +1,4 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { authClient } from "@/lib/auth-client";
 import { PageHeader } from "@/components/common/PageHeader";
 
 export const Route = createFileRoute("/settings")({
@@ -7,20 +6,12 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsLayout() {
-  const { data: session } = authClient.useSession();
-  const isAdmin = session?.user?.role === "admin";
-
   const links = [
     { to: "/settings/preferences", label: "Preferences" },
     { to: "/settings/profile", label: "Profile" },
     { to: "/onboarding", label: "Onboarding" },
-    ...(isAdmin
-      ? [
-          { to: "/settings/providers", label: "Providers" },
-          { to: "/settings/presets", label: "Presets" },
-          { to: "/settings/demo", label: "Demo Provider" },
-        ]
-      : []),
+    { to: "/settings/providers", label: "Providers" },
+    { to: "/settings/presets", label: "Presets" },
   ];
 
   return (

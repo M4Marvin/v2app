@@ -34,7 +34,6 @@ describe("generation service", () => {
     db.insert(characters)
       .values({
         id: charId,
-        userId,
         name: data.name,
         data,
         spec: "chara_card_v2",
@@ -43,11 +42,7 @@ describe("generation service", () => {
         updatedAt: new Date(),
       })
       .run();
-    const chat = createChat(
-      userId,
-      { characterId: charId, title: "Test", greetings: ["Hello!"] },
-      db,
-    );
+    const chat = createChat({ characterId: charId, title: "Test", greetings: ["Hello!"] }, db);
     chatId = chat.id;
   });
 
@@ -59,7 +54,6 @@ describe("generation service", () => {
     db.insert(aiProviders)
       .values({
         id: "prov-1",
-        userId,
         name: "Test",
         baseUrl: "http://localhost:11434",
         apiKey: "test-key",
@@ -122,7 +116,7 @@ describe("generation service", () => {
     it("uses persona name for {{user}} when persona is set", () => {
       seedProvider();
       db.insert(personas)
-        .values({ id: "persona-1", userId, name: "PersonaName", description: "desc" })
+        .values({ id: "persona-1", name: "PersonaName", description: "desc" })
         .run();
       db.update(userSettings)
         .set({ defaultPersonaId: "persona-1" })
@@ -174,9 +168,8 @@ describe("generation service", () => {
     it("creates sibling at the end and acquires lock", () => {
       seedProvider();
 
-      appendUserAndReply(userId, chatId, "Hi", "First reply", undefined, db);
+      appendUserAndReply(chatId, "Hi", "First reply", undefined, db);
       const existingSibling = appendSibling(
-        userId,
         chatId,
         3,
         { role: "assistant", content: "Existing sibling" },
@@ -211,7 +204,7 @@ describe("generation service", () => {
 
     it("throws on user message", () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hi", "Reply", undefined, db);
+      appendUserAndReply(chatId, "Hi", "Reply", undefined, db);
       expect(() =>
         prepareStream(userId, { chatId, mode: "regenerate", messageLocalId: 2 }, "Test User", db),
       ).toThrow("assistant");
@@ -226,15 +219,8 @@ describe("generation service", () => {
 
     it("throws when locked", () => {
       seedProvider();
-      const { replyMessage } = appendUserAndReply(
-        userId,
-        chatId,
-        "Hi",
-        "",
-        { isStreaming: true },
-        db,
-      );
-      acquireGenerationLock(userId, chatId, replyMessage.localId, db);
+      const { replyMessage } = appendUserAndReply(chatId, "Hi", "", { isStreaming: true }, db);
+      acquireGenerationLock(chatId, replyMessage.localId, db);
       expect(() =>
         prepareStream(
           userId,
@@ -251,9 +237,9 @@ describe("generation service", () => {
   describe("prepareStream continue", () => {
     it("from user leaf: creates assistant child and acquires lock", () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hi", "Reply", undefined, db);
+      appendUserAndReply(chatId, "Hi", "Reply", undefined, db);
       // Active leaf = reply(3). Append a user message to make user the active leaf:
-      appendMessage(userId, chatId, { role: "user", content: "Tell me more" }, db);
+      appendMessage(chatId, { role: "user", content: "Tell me more" }, db);
       // Active leaf = user(4)
 
       const result = prepareStream(userId, { chatId, mode: "continue" }, "Test User", db);
@@ -276,9 +262,9 @@ describe("generation service", () => {
       seedProvider();
 
       // greeting(1). Active = 1. Create sibling: children = [1, 2], selected = 2.
-      swipe(userId, chatId, 1, "next", { role: "assistant", content: "Reply 2" }, db);
+      swipe(chatId, 1, "next", { role: "assistant", content: "Reply 2" }, db);
       // Select original greeting: children = [1, 2], selected = 1.
-      swipe(userId, chatId, 2, "prev", undefined, db);
+      swipe(chatId, 2, "prev", undefined, db);
 
       const result = prepareStream(userId, { chatId, mode: "continue" }, "Test User", db);
 
@@ -297,7 +283,7 @@ describe("generation service", () => {
   describe("prepareStream rejects when locked", () => {
     it("throws for send mode when chat is locked", () => {
       seedProvider();
-      acquireGenerationLock(userId, chatId, 1, db);
+      acquireGenerationLock(chatId, 1, db);
 
       expect(() =>
         prepareStream(userId, { chatId, mode: "send", content: "Hi" }, "Test User", db),
@@ -366,7 +352,7 @@ describe("generation service", () => {
       const localId = (result as { mode: "stream"; assistantMessageLocalId: number })
         .assistantMessageLocalId;
 
-      const cancelResult = cancelStream(userId, chatId, localId, db);
+      const cancelResult = cancelStream(chatId, localId, db);
       expect(cancelResult.deletedIds).toContain(localId);
 
       const msg = db.select().from(chatMessages).where(eq(chatMessages.localId, localId)).get();
@@ -377,7 +363,7 @@ describe("generation service", () => {
     });
 
     it("throws on root", () => {
-      expect(() => cancelStream(userId, chatId, 0, db)).toThrow("root");
+      expect(() => cancelStream(chatId, 0, db)).toThrow("root");
     });
   });
 
@@ -386,7 +372,7 @@ describe("generation service", () => {
   describe("impersonateMessage", () => {
     it("returns text from mock fetch", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
 
       const mockFetch = vi.fn();
       mockFetch.mockResolvedValue({
@@ -420,7 +406,7 @@ describe("generation service", () => {
 
     it("uses custom impersonationPrompt from settings", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
 
       db.update(userSettings)
         .set({ impersonationPrompt: "Pretend to be {{user}} today." })
@@ -443,7 +429,7 @@ describe("generation service", () => {
 
     it("throws on provider error", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
 
       const mockFetch = vi.fn();
       mockFetch.mockResolvedValue({
@@ -473,7 +459,7 @@ describe("generation service", () => {
 
     it("sends the expected request shape (model, system-first messages, stream: false)", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       const mockFetch = mockImagePromptFetch();
 
       await generateImagePrompt(userId, chatId, "Test User", { fetchFn: mockFetch as any }, db);
@@ -497,7 +483,7 @@ describe("generation service", () => {
 
     it("uses custom imagePromptExample from settings in the instruction", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       db.update(userSettings)
         .set({ imagePromptExample: "custom example, 1boy, watercolor" })
         .where(eq(userSettings.userId, userId))
@@ -514,7 +500,7 @@ describe("generation service", () => {
 
     it("falls back to DEFAULT_IMAGE_PROMPT_EXAMPLE when the setting is null", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       const mockFetch = mockImagePromptFetch();
 
       await generateImagePrompt(userId, chatId, "Test User", { fetchFn: mockFetch as any }, db);
@@ -526,7 +512,7 @@ describe("generation service", () => {
 
     it("requires preserving style/artist tags from the reference example", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       const mockFetch = mockImagePromptFetch();
 
       await generateImagePrompt(userId, chatId, "Test User", { fetchFn: mockFetch as any }, db);
@@ -539,7 +525,7 @@ describe("generation service", () => {
 
     it("includes the character base (name, description, personality, tags) verbatim", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       const mockFetch = mockImagePromptFetch();
 
       await generateImagePrompt(userId, chatId, "Test User", { fetchFn: mockFetch as any }, db);
@@ -558,7 +544,7 @@ describe("generation service", () => {
     it("limits the scene to the last 10 history messages", async () => {
       seedProvider();
       for (let i = 1; i <= 8; i++) {
-        appendUserAndReply(userId, chatId, `user ${i}`, `reply ${i}`, undefined, db);
+        appendUserAndReply(chatId, `user ${i}`, `reply ${i}`, undefined, db);
       }
       const mockFetch = mockImagePromptFetch();
 
@@ -578,11 +564,7 @@ describe("generation service", () => {
 
     it("falls back to character.scenario as the scene on an empty conversation", async () => {
       seedProvider();
-      const emptyChat = createChat(
-        userId,
-        { characterId: charId, title: "Empty", greetings: [""] },
-        db,
-      );
+      const emptyChat = createChat({ characterId: charId, title: "Empty", greetings: [""] }, db);
       const mockFetch = mockImagePromptFetch();
 
       await generateImagePrompt(
@@ -601,7 +583,7 @@ describe("generation service", () => {
 
     it("throws on provider error", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       const mockFetch = vi.fn();
       mockFetch.mockResolvedValue({
         ok: false,
@@ -625,7 +607,7 @@ describe("generation service", () => {
 
     it("returns text parsed from choices[0].message.content", async () => {
       seedProvider();
-      appendUserAndReply(userId, chatId, "Hello", "Hi there!", undefined, db);
+      appendUserAndReply(chatId, "Hello", "Hi there!", undefined, db);
       const mockFetch = mockImagePromptFetch("masterpiece, 1girl, sunset");
 
       const result = await generateImagePrompt(

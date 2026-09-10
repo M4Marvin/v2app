@@ -100,8 +100,8 @@ function validateUpdateInput(data: unknown): {
 
 export const listAiProviders = createServerFn({ method: "GET" }).handler(
   async (): Promise<AiProviderListItem[]> => {
-    const { user } = await getSession();
-    const rows = await repoList(user.id);
+    await getSession();
+    const rows = await repoList();
     return rows.map(toListItem);
   },
 );
@@ -109,18 +109,17 @@ export const listAiProviders = createServerFn({ method: "GET" }).handler(
 export const getAiProvider = createServerFn({ method: "GET", strict: { output: false } })
   .validator(validateId)
   .handler(async ({ data }): Promise<AiProviderListItem> => {
-    const { user } = await getSession();
-    return toListItem(await repoGet(user.id, data.id));
+    await getSession();
+    return toListItem(await repoGet(data.id));
   });
 
 export const createAiProvider = createServerFn({ method: "POST" })
   .validator(validateCreateInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const id = randomUUID();
     const input: CreateAiProviderInput = {
       id,
-      userId: user.id,
       name: data.name,
       baseUrl: data.baseUrl,
       apiKey: data.apiKey,
@@ -134,7 +133,7 @@ export const createAiProvider = createServerFn({ method: "POST" })
 export const updateAiProvider = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const patch: UpdateAiProviderInput = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.baseUrl !== undefined) patch.baseUrl = data.baseUrl;
@@ -143,14 +142,14 @@ export const updateAiProvider = createServerFn({ method: "POST", strict: { outpu
     if (data.defaultHeaders !== undefined) {
       patch.defaultHeaders = data.defaultHeaders as Record<string, string> | null;
     }
-    await repoUpdate(user.id, data.id, patch);
+    await repoUpdate(data.id, patch);
     return { id: data.id };
   });
 
 export const deleteAiProvider = createServerFn({ method: "POST" })
   .validator(validateId)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    await repoDelete(user.id, data.id);
+    await getSession();
+    await repoDelete(data.id);
     return { id: data.id };
   });

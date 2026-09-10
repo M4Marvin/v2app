@@ -57,21 +57,14 @@ function messageToRow(chatId: string, msg: ChatMessage): NewChatMessageRow {
   };
 }
 
-function loadTree(userId: string, chatId: string, db: DB): ChatTree {
-  const rows = repoListMessages(userId, chatId, db);
+function loadTree(chatId: string, db: DB): ChatTree {
+  const rows = repoListMessages(chatId, db);
   return treeFromNodes(rows.map(rowToMessage));
 }
 
-function persistParent(
-  userId: string,
-  chatId: string,
-  tree: ChatTree,
-  parentId: number,
-  db: DB,
-): void {
+function persistParent(chatId: string, tree: ChatTree, parentId: number, db: DB): void {
   const parent = getNode(tree, parentId);
   repoUpdateMessage(
-    userId,
     chatId,
     parentId,
     {
@@ -82,19 +75,19 @@ function persistParent(
   );
 }
 
-function persistNewMessage(userId: string, chatId: string, message: ChatMessage, db: DB): void {
-  repoInsertMessage(userId, chatId, messageToRow(chatId, message), db);
+function persistNewMessage(chatId: string, message: ChatMessage, db: DB): void {
+  repoInsertMessage(chatId, messageToRow(chatId, message), db);
 }
 
 // ── Reads ──
 
-export function listChats(userId: string, db: DB = defaultDb): ChatWithCharacter[] {
-  return repoListChats(userId, db);
+export function listChats(db: DB = defaultDb): ChatWithCharacter[] {
+  return repoListChats(db);
 }
 
-export function getChat(userId: string, chatId: string, db: DB = defaultDb): ChatDetail {
-  const chat = repoGetChat(userId, chatId, db);
-  const root = repoGetMessage(userId, chatId, 0, db);
+export function getChat(chatId: string, db: DB = defaultDb): ChatDetail {
+  const chat = repoGetChat(chatId, db);
+  const root = repoGetMessage(chatId, 0, db);
   const lockExtra = root?.extra;
   const isGenerating = lockExtra?.lock === "generating";
 
@@ -114,32 +107,27 @@ export function getChat(userId: string, chatId: string, db: DB = defaultDb): Cha
   };
 }
 
-export function getMessages(userId: string, chatId: string, db: DB = defaultDb): ChatMessage[] {
-  return repoListMessages(userId, chatId, db).map(rowToMessage);
+export function getMessages(chatId: string, db: DB = defaultDb): ChatMessage[] {
+  return repoListMessages(chatId, db).map(rowToMessage);
 }
 
-export function getActivePath(
-  userId: string,
-  chatId: string,
-  db: DB = defaultDb,
-): ActivePathEntry[] {
-  const messages = getMessages(userId, chatId, db);
+export function getActivePath(chatId: string, db: DB = defaultDb): ActivePathEntry[] {
+  const messages = getMessages(chatId, db);
   return computeActivePathFromMessages(messages);
 }
 
 export function getPathToMessage(
-  userId: string,
   chatId: string,
   messageLocalId: number,
   db: DB = defaultDb,
 ): ChatMessage[] {
-  const tree = loadTree(userId, chatId, db);
+  const tree = loadTree(chatId, db);
   return getPathToNode(tree, messageLocalId);
 }
 
 // ── Chat lifecycle ──
 
-export function createChat(userId: string, input: CreateChatInput, db: DB = defaultDb): ChatDetail {
+export function createChat(input: CreateChatInput, db: DB = defaultDb): ChatDetail {
   if (input.greetings.length === 0) {
     throw new Error("createChat: at least one greeting is required");
   }
@@ -150,7 +138,6 @@ export function createChat(userId: string, input: CreateChatInput, db: DB = defa
     const chat = repoCreateChat(
       {
         id: chatId,
-        userId,
         characterId: input.characterId,
         title: input.title,
         characterDescription: input.characterDescription ?? "",
@@ -162,7 +149,6 @@ export function createChat(userId: string, input: CreateChatInput, db: DB = defa
     );
 
     repoInsertMessage(
-      userId,
       chatId,
       {
         chatId,
@@ -179,7 +165,6 @@ export function createChat(userId: string, input: CreateChatInput, db: DB = defa
 
     input.greetings.forEach((text, i) => {
       repoInsertMessage(
-        userId,
         chatId,
         {
           chatId,
@@ -221,9 +206,9 @@ export function createChat(userId: string, input: CreateChatInput, db: DB = defa
   }
 }
 
-export function deleteChat(userId: string, chatId: string, db: DB = defaultDb): void {
+export function deleteChat(chatId: string, db: DB = defaultDb): void {
   try {
-    repoDeleteChat(userId, chatId, db);
+    repoDeleteChat(chatId, db);
     log.info("Chat deleted", { chatId });
   } catch (e) {
     log.error("deleteChat failed", { chatId }, e as Error);
@@ -233,16 +218,11 @@ export function deleteChat(userId: string, chatId: string, db: DB = defaultDb): 
 
 // ── Message operations ──
 
-export function appendMessage(
-  userId: string,
-  chatId: string,
-  msg: NewMessage,
-  db: DB = defaultDb,
-): ChatMessage {
+export function appendMessage(chatId: string, msg: NewMessage, db: DB = defaultDb): ChatMessage {
   log.debug("appendMessage start", { chatId, role: msg.role });
-  ensureChatIdle(userId, chatId, db);
+  ensureChatIdle(chatId, db);
   try {
-    const rows = repoListMessages(userId, chatId, db);
+    const rows = repoListMessages(chatId, db);
     const tree = treeFromNodes(rows.map(rowToMessage));
     const activeLeafId = getActiveLeafId(tree);
     if (activeLeafId === null) {
@@ -250,8 +230,8 @@ export function appendMessage(
     }
 
     const newNode = appendChild(tree, activeLeafId, msg);
-    persistParent(userId, chatId, tree, activeLeafId, db);
-    persistNewMessage(userId, chatId, newNode, db);
+    persistParent(chatId, tree, activeLeafId, db);
+    persistNewMessage(chatId, newNode, db);
     log.info("Message appended", { chatId, messageLocalId: newNode.localId, role: msg.role });
     return newNode;
   } catch (e) {
@@ -261,7 +241,6 @@ export function appendMessage(
 }
 
 export function appendUserAndReply(
-  userId: string,
   chatId: string,
   userContent: string,
   replyContent: string,
@@ -272,10 +251,10 @@ export function appendUserAndReply(
     throw new Error("User content cannot be empty");
   }
   log.debug("appendUserAndReply start", { chatId, userContentLength: userContent.length });
-  ensureChatIdle(userId, chatId, db);
+  ensureChatIdle(chatId, db);
 
   try {
-    const rows = repoListMessages(userId, chatId, db);
+    const rows = repoListMessages(chatId, db);
     const tree = treeFromNodes(rows.map(rowToMessage));
     const activeLeafId = getActiveLeafId(tree);
     if (activeLeafId === null) {
@@ -286,16 +265,16 @@ export function appendUserAndReply(
       role: "user",
       content: userContent,
     });
-    persistParent(userId, chatId, tree, activeLeafId, db);
-    persistNewMessage(userId, chatId, userMessage, db);
+    persistParent(chatId, tree, activeLeafId, db);
+    persistNewMessage(chatId, userMessage, db);
 
     const replyMessage = appendChild(tree, userMessage.localId, {
       role: "assistant",
       content: replyContent,
       ...(replyExtra ? { extra: replyExtra } : {}),
     });
-    persistParent(userId, chatId, tree, userMessage.localId, db);
-    persistNewMessage(userId, chatId, replyMessage, db);
+    persistParent(chatId, tree, userMessage.localId, db);
+    persistNewMessage(chatId, replyMessage, db);
 
     log.info("User + reply appended", {
       chatId,
@@ -311,7 +290,6 @@ export function appendUserAndReply(
 }
 
 export function swipe(
-  userId: string,
   chatId: string,
   messageLocalId: number,
   direction: "next" | "prev",
@@ -319,15 +297,15 @@ export function swipe(
   db: DB = defaultDb,
 ): SwipeResult {
   log.debug("swipe start", { chatId, messageLocalId, direction });
-  ensureChatIdle(userId, chatId, db);
+  ensureChatIdle(chatId, db);
   try {
-    const rows = repoListMessages(userId, chatId, db);
+    const rows = repoListMessages(chatId, db);
     const tree = treeFromNodes(rows.map(rowToMessage));
 
     const existing = selectSibling(tree, messageLocalId, direction);
     if (existing !== null || direction === "prev") {
       if (existing !== null) {
-        persistParent(userId, chatId, tree, existing.parentLocalId!, db);
+        persistParent(chatId, tree, existing.parentLocalId!, db);
       }
       log.info("Swipe result", {
         chatId,
@@ -359,8 +337,8 @@ export function swipe(
     const target = getNode(tree, messageLocalId);
     const parentId = target.parentLocalId!;
     const newSibling = createSiblingAndSelect(tree, messageLocalId, createIfMissing);
-    persistParent(userId, chatId, tree, parentId, db);
-    persistNewMessage(userId, chatId, newSibling, db);
+    persistParent(chatId, tree, parentId, db);
+    persistNewMessage(chatId, newSibling, db);
     log.info("Swipe result", {
       chatId,
       messageLocalId,
@@ -376,16 +354,15 @@ export function swipe(
 }
 
 export function appendSibling(
-  userId: string,
   chatId: string,
   targetLocalId: number,
   msg: SiblingContent,
   db: DB = defaultDb,
 ): ChatMessage {
   log.debug("appendSibling start", { chatId, targetLocalId });
-  ensureChatIdle(userId, chatId, db);
+  ensureChatIdle(chatId, db);
   try {
-    const rows = repoListMessages(userId, chatId, db);
+    const rows = repoListMessages(chatId, db);
     const tree = treeFromNodes(rows.map(rowToMessage));
     const target = getNode(tree, targetLocalId);
     if (!target) throw new Error("Message not found");
@@ -394,8 +371,8 @@ export function appendSibling(
     }
     const parentId = target.parentLocalId;
     const newSibling = appendChild(tree, parentId, msg);
-    persistParent(userId, chatId, tree, parentId, db);
-    persistNewMessage(userId, chatId, newSibling, db);
+    persistParent(chatId, tree, parentId, db);
+    persistNewMessage(chatId, newSibling, db);
     log.info("Sibling appended", {
       chatId,
       targetLocalId,
@@ -409,7 +386,6 @@ export function appendSibling(
 }
 
 export function deleteBranch(
-  userId: string,
   chatId: string,
   messageLocalId: number,
   db: DB = defaultDb,
@@ -420,10 +396,10 @@ export function deleteBranch(
   }
   log.debug("deleteBranch start", { chatId, messageLocalId });
   if (!opts?.skipIdleCheck) {
-    ensureChatIdle(userId, chatId, db);
+    ensureChatIdle(chatId, db);
   }
   try {
-    const rows = repoListMessages(userId, chatId, db);
+    const rows = repoListMessages(chatId, db);
     const tree = treeFromNodes(rows.map(rowToMessage));
     const target = getNode(tree, messageLocalId);
     if (target.parentLocalId === null) {
@@ -431,8 +407,8 @@ export function deleteBranch(
     }
     const parentId = target.parentLocalId;
     const deletedIds = removeBranch(tree, messageLocalId);
-    persistParent(userId, chatId, tree, parentId, db);
-    repoDeleteMessages(userId, chatId, deletedIds, db);
+    persistParent(chatId, tree, parentId, db);
+    repoDeleteMessages(chatId, deletedIds, db);
     log.info("Branch deleted", { chatId, messageLocalId, deletedCount: deletedIds.length });
     return { deletedIds };
   } catch (e) {
@@ -442,7 +418,6 @@ export function deleteBranch(
 }
 
 export function editMessage(
-  userId: string,
   chatId: string,
   messageLocalId: number,
   content: string,
@@ -452,11 +427,11 @@ export function editMessage(
     throw new Error("Cannot edit the hidden root");
   }
   log.debug("editMessage start", { chatId, messageLocalId, contentLength: content.length });
-  ensureChatIdle(userId, chatId, db);
+  ensureChatIdle(chatId, db);
   try {
-    const msg = repoListMessages(userId, chatId, db).find((r) => r.localId === messageLocalId);
+    const msg = repoListMessages(chatId, db).find((r) => r.localId === messageLocalId);
     if (!msg) throw new Error("Message not found");
-    repoUpdateMessage(userId, chatId, messageLocalId, { content }, db);
+    repoUpdateMessage(chatId, messageLocalId, { content }, db);
     log.info("Message edited", { chatId, messageLocalId, contentLength: content.length });
   } catch (e) {
     log.error("editMessage failed", { chatId, messageLocalId }, e as Error);

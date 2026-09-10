@@ -40,8 +40,8 @@ export const finalizeStreamFn = createServerFn({ method: "POST", strict: { outpu
 export const cancelStreamFn = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(CancelStreamSchema)(data))
   .handler(async ({ data }) => {
-    const { user } = await getSession();
-    return cancelStream(user.id, data.chatId, data.messageLocalId);
+    await getSession();
+    return cancelStream(data.chatId, data.messageLocalId);
   });
 
 const ImpersonateSchema = Schema.Struct({

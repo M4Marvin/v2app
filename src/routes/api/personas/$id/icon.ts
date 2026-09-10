@@ -8,16 +8,15 @@ export const Route = createFileRoute("/api/personas/$id/icon")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        let user;
         try {
-          user = (await getSession()).user;
+          await getSession();
         } catch {
           return new Response("Unauthorized", { status: 401 });
         }
 
         let persona;
         try {
-          persona = getPersona(user.id, params.id);
+          persona = getPersona(params.id);
         } catch {
           return new Response("Persona not found", { status: 404 });
         }

@@ -49,7 +49,7 @@ function toView(
 export const getUserSettings = createServerFn({ method: "GET", strict: { output: false } }).handler(
   async (): Promise<UserSettingsView> => {
     const { user } = await getSession();
-    return toView(repoGetUserSettings(user.id));
+    return toView(repoGetUserSettings(user.id)); // account FK
   },
 );
 
@@ -69,6 +69,6 @@ export const updateUserSettings = createServerFn({ method: "POST", strict: { out
     if (data.impersonationPrompt !== undefined)
       patch.impersonationPrompt = data.impersonationPrompt;
     if (data.imagePromptExample !== undefined) patch.imagePromptExample = data.imagePromptExample;
-    const row = repoUpsertUserSettings(user.id, patch);
+    const row = repoUpsertUserSettings(user.id, patch); // account FK
     return toView(row);
   });

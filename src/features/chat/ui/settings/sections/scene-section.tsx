@@ -9,10 +9,9 @@ import { SectionHeader } from "../section-header";
 interface SectionProps {
   chatId: string;
   isStreaming: boolean;
-  isAdmin: boolean;
 }
 
-export function SceneSection({ chatId, isAdmin, isStreaming }: SectionProps) {
+export function SceneSection({ chatId, isStreaming }: SectionProps) {
   const { data: config } = useChatConfig(chatId);
   const { data: backgrounds } = useBackgrounds();
   const updateOverrides = useUpdateChatOverrides();
@@ -76,16 +75,14 @@ export function SceneSection({ chatId, isAdmin, isStreaming }: SectionProps) {
                 className="size-full object-cover"
               />
             </button>
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(bg.id)}
-                className="absolute top-0.5 right-0.5 z-10 size-6 rounded-full bg-black/60 flex items-center justify-center text-white/50 hover:text-white hover:bg-black/80"
-                aria-label={`Delete ${bg.name}`}
-              >
-                <X className="size-3" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(bg.id)}
+              className="absolute top-0.5 right-0.5 z-10 size-6 rounded-full bg-black/60 flex items-center justify-center text-white/50 hover:text-white hover:bg-black/80"
+              aria-label={`Delete ${bg.name}`}
+            >
+              <X className="size-3" />
+            </button>
           </div>
         ))}
       </div>
@@ -103,35 +100,31 @@ export function SceneSection({ chatId, isAdmin, isStreaming }: SectionProps) {
             Clear scene
           </Button>
         )}
-        {isAdmin && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadBg.isPending}
-              className="flex items-center gap-1.5"
-              aria-live="polite"
-            >
-              {uploadBg.isPending ? (
-                "Uploading..."
-              ) : (
-                <>
-                  <Upload className="size-3.5" data-icon="inline-start" />
-                  Upload
-                </>
-              )}
-            </Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleUpload}
-              aria-label="Upload background image"
-            />
-          </>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploadBg.isPending}
+          className="flex items-center gap-1.5"
+          aria-live="polite"
+        >
+          {uploadBg.isPending ? (
+            "Uploading..."
+          ) : (
+            <>
+              <Upload className="size-3.5" data-icon="inline-start" />
+              Upload
+            </>
+          )}
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleUpload}
+          aria-label="Upload background image"
+        />
       </div>
 
       <ConfirmDialog

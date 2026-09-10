@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getVisibleNavGroups, type SettingsSection } from "./settings-nav-model";
 
@@ -12,10 +11,7 @@ interface SettingsNavProps {
 }
 
 export function SettingsNav({ sections, activeId, onChange }: SettingsNavProps) {
-  const { data: session } = authClient.useSession();
-  const isAdmin = session?.user?.role === "admin";
-
-  const groups = getVisibleNavGroups(sections, isAdmin);
+  const groups = getVisibleNavGroups(sections);
 
   return (
     <nav

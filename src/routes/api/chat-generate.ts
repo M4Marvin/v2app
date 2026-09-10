@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { chat as aiChat, toServerSentEventsResponse } from "@tanstack/ai";
 import { openaiCompatibleText } from "@tanstack/ai-openai/compatible";
 import { getSession } from "@/server/session";
-import { checkRateLimit } from "@/server/ratelimit";
 import {
   loadGenerationContext,
   buildPromptFromContext,
@@ -17,14 +16,6 @@ export const Route = createFileRoute("/api/chat-generate")({
       POST: async ({ request }) => {
         try {
           const { user } = await getSession();
-
-          const { allowed, retryAfterMs } = checkRateLimit({ role: user.role, id: user.id });
-          if (!allowed) {
-            return new Response(JSON.stringify({ error: "Rate limited", retryAfterMs }), {
-              status: 429,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
 
           const rawBody = await request.text();
 

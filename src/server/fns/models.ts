@@ -3,7 +3,7 @@ import { type } from "arktype";
 import { Effect } from "effect";
 import { getSession } from "@/server/session";
 import { validateId } from "@/server/validators";
-import { getAiProviderWithGlobalFallback as repoGet } from "@/db/repositories/aiProviders";
+import { getAiProvider as repoGet } from "@/db/repositories/aiProviders";
 import {
   probeProviderModels,
   type ProviderModel,
@@ -16,8 +16,8 @@ export type { ProviderModel, ProbeResult, ChatTestResult };
 export const listProviderModels = createServerFn({ method: "GET", strict: { output: false } })
   .validator(validateId)
   .handler(async ({ data }): Promise<ProviderModel[]> => {
-    const { user } = await getSession();
-    const provider = await repoGet(user.id, data.id);
+    await getSession();
+    const provider = await repoGet(data.id);
 
     const result = await Effect.runPromise(probeProviderModels(provider));
     if (!result.ok) throw new Error(result.error ?? "Provider unreachable");
@@ -27,8 +27,8 @@ export const listProviderModels = createServerFn({ method: "GET", strict: { outp
 export const testProviderConnection = createServerFn({ method: "GET" })
   .validator(validateId)
   .handler(async ({ data }): Promise<ProbeResult> => {
-    const { user } = await getSession();
-    const provider = await repoGet(user.id, data.id);
+    await getSession();
+    const provider = await repoGet(data.id);
     return Effect.runPromise(probeProviderModels(provider));
   });
 
@@ -45,8 +45,8 @@ export const testProviderChat = createServerFn({ method: "POST" })
     return result;
   })
   .handler(async ({ data }): Promise<ChatTestResult> => {
-    const { user } = await getSession();
-    const provider = await repoGet(user.id, data.providerId);
+    await getSession();
+    const provider = await repoGet(data.providerId);
 
     const model = data.model?.trim() || provider.defaultModel;
     if (!model) {
