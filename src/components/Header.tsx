@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { LogOut, Plus, Search, Settings, Shield } from "lucide-react";
+import { LogOut, Plus, Search, Settings } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -86,16 +86,12 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     <Link to="/characters">New chat</Link>
                   </DropdownMenuItem>
-                  {session.user.role === "admin" ? (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/characters/new">Import character</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/lorebooks/new">New lorebook</Link>
-                      </DropdownMenuItem>
-                    </>
-                  ) : null}
+                  <DropdownMenuItem asChild>
+                    <Link to="/characters/new">Import character</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/lorebooks/new">New lorebook</Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -116,16 +112,6 @@ export default function Header() {
                       Settings
                     </Link>
                   </DropdownMenuItem>
-                  {session.user.role === "admin" ? (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/users">
-                          <Shield className="size-4" />
-                          Admin
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  ) : null}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {
@@ -150,7 +136,7 @@ export default function Header() {
                 <Link to="/signin">Sign in</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/signup">Sign up</Link>
+                <Link to="/setup">Create account</Link>
               </Button>
             </div>
           )}

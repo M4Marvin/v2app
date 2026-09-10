@@ -150,7 +150,7 @@ function SigninPage() {
                     <p className="text-center text-sm text-2">
                       Don&apos;t have an account?{" "}
                       <Link
-                        to="/signup"
+                        to="/setup"
                         className="text-brand hover:text-brand-strong underline underline-offset-4"
                       >
                         Sign up

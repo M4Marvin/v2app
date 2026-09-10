@@ -4,7 +4,6 @@ export interface SettingsSection {
   id: string;
   label: string;
   icon: LucideIcon;
-  adminOnly?: boolean;
   group: "connection" | "chat" | "display";
   secondary?: boolean;
 }
@@ -17,13 +16,10 @@ export const GROUP_LABELS: Record<SettingsSection["group"], string> = {
 
 export function getVisibleNavGroups(
   sections: SettingsSection[],
-  isAdmin: boolean,
 ): { id: SettingsSection["group"]; label: string; items: SettingsSection[] }[] {
   const groups = new Map<SettingsSection["group"], SettingsSection[]>();
 
   for (const section of sections) {
-    if (section.adminOnly && !isAdmin) continue;
-
     const group = groups.get(section.group);
     if (group) {
       group.push(section);

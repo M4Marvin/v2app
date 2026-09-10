@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Zap,
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/sheet";
 import { useChatConfig } from "@/hooks/useChatConfig";
 import { useDeleteChat } from "@/hooks/useChats";
-import { authClient } from "@/lib/auth-client";
 import { SettingsNav } from "./settings-nav";
 import type { SettingsSection } from "./settings-nav-model";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -35,12 +34,11 @@ import { SceneSection } from "./sections/scene-section";
 import { DisplaySection } from "./sections/display-section";
 
 const SECTIONS: SettingsSection[] = [
-  { id: "connection", label: "Connection", icon: Zap, adminOnly: true, group: "connection" },
+  { id: "connection", label: "Connection", icon: Zap, group: "connection" },
   {
     id: "providers",
     label: "Providers",
     icon: Server,
-    adminOnly: true,
     group: "connection",
     secondary: true,
   },
@@ -48,7 +46,6 @@ const SECTIONS: SettingsSection[] = [
     id: "presets",
     label: "Presets",
     icon: SlidersHorizontal,
-    adminOnly: true,
     group: "connection",
     secondary: true,
   },
@@ -68,26 +65,13 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ chatId, open, onOpenChange }: SettingsPanelProps) {
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
   const { data: config } = useChatConfig(chatId);
   const deleteChat = useDeleteChat();
 
-  const isAdmin = session?.user?.role === "admin";
   const isStreaming = config?.chat.lockState === "generating";
-  const firstVisibleId = SECTIONS.find((s) => !s.adminOnly || isAdmin)?.id ?? "persona";
 
-  const [activeId, setActiveId] = useState("persona");
+  const [activeId, setActiveId] = useState(SECTIONS[0].id);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  // Session settles after mount (data starts null/undefined): derive the initial
-  // section once auth resolves, else admins land on Persona instead of Connection.
-  const initialSectionApplied = useRef(false);
-  useEffect(() => {
-    if (initialSectionApplied.current) return;
-    if (!session?.user) return; // session not settled yet
-    setActiveId(firstVisibleId);
-    initialSectionApplied.current = true;
-  }, [session, isAdmin, firstVisibleId]);
 
   const handleDelete = useCallback(() => {
     deleteChat.mutate(
@@ -104,7 +88,7 @@ export function SettingsPanel({ chatId, open, onOpenChange }: SettingsPanelProps
     setActiveId(id);
   }, []);
 
-  const sectionProps = { chatId, isStreaming, isAdmin, onNavigate: handleSectionChange };
+  const sectionProps = { chatId, isStreaming, onNavigate: handleSectionChange };
 
   return (
     <>
@@ -125,9 +109,9 @@ export function SettingsPanel({ chatId, open, onOpenChange }: SettingsPanelProps
 
             <div className="flex-1 min-w-0 overflow-y-auto px-5 py-5 scrollbar-thin scroll-fade-b">
               <div key={activeId} className="section-switch">
-                {activeId === "connection" && isAdmin && <ConnectionSection {...sectionProps} />}
-                {activeId === "providers" && isAdmin && <ProviderSection {...sectionProps} />}
-                {activeId === "presets" && isAdmin && <PresetSection {...sectionProps} />}
+                {activeId === "connection" && <ConnectionSection {...sectionProps} />}
+                {activeId === "providers" && <ProviderSection {...sectionProps} />}
+                {activeId === "presets" && <PresetSection {...sectionProps} />}
                 {activeId === "persona" && <PersonaSection {...sectionProps} />}
                 {activeId === "lorebooks" && <LorebooksSection {...sectionProps} />}
                 {activeId === "prompts" && <PromptsSection {...sectionProps} />}

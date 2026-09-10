@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Eye, EyeOff, Check } from "lucide-react";
@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/common/ErrorBanner";
 import { authClient } from "@/lib/auth-client";
 import { getOnboardingStatus } from "@/server/fns/onboarding";
+import { getSetupRequired } from "@/server/fns/setup";
 import { postAuthTarget } from "@/features/onboarding/onboarding-gate";
 
-const signupSchema = z
+const setupSchema = z
   .object({
     username: z
       .string()
@@ -27,18 +28,23 @@ const signupSchema = z
     path: ["confirmPassword"],
   });
 
-export const Route = createFileRoute("/signup")({
-  component: SignupPage,
+export const Route = createFileRoute("/setup")({
+  beforeLoad: async () => {
+    // First-run only: once an account exists, setup is closed.
+    const { needsSetup } = await getSetupRequired();
+    if (!needsSetup) throw redirect({ to: "/signin" });
+  },
+  component: SetupPage,
 });
 
-function SignupPage() {
+function SetupPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [showPw, setShowPw] = useState(false);
 
   const form = useForm({
     defaultValues: { username: "", password: "", confirmPassword: "" },
-    validators: { onSubmit: signupSchema },
+    validators: { onSubmit: setupSchema },
     onSubmit: async ({ value }) => {
       setError(null);
       const result = await authClient.signUp.email({
@@ -48,8 +54,8 @@ function SignupPage() {
         username: value.username,
       });
       if (result.error) {
-        setError(result.error.message || "Sign up failed");
-        toast.error(result.error.message || "Sign up failed");
+        setError(result.error.message || "Couldn't create your account");
+        toast.error(result.error.message || "Couldn't create your account");
         return;
       }
       const status = await getOnboardingStatus();
@@ -81,7 +87,7 @@ function SignupPage() {
           <Link to="/" className="text-2 hover:text-1 text-sm mb-6 inline-block">
             ← Back to home
           </Link>
-          <h2 className="text-title mb-6">Create an account</h2>
+          <h2 className="text-title mb-6">Create your account</h2>
 
           {error ? <ErrorBanner message={error} /> : null}
 

@@ -18,7 +18,6 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { TriangleAlert, Compass } from "lucide-react";
 import { MobileTabBar } from "@/components/common/MobileTabBar";
-import { DemoBanner } from "@/components/common/DemoBanner";
 import { CommandMenu } from "@/components/common/CommandMenu";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -67,7 +66,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   errorComponent: RootErrorComponent,
   notFoundComponent: RootNotFoundComponent,
   beforeLoad: async ({ location }) => {
-    const publicPrefixes = ["/", "/signin", "/signup"];
+    const publicPrefixes = ["/", "/signin", "/setup"];
     const isApiRoute = location.pathname.startsWith("/api/");
     const isAssetRoute = location.pathname.startsWith("/assets/");
     if (
@@ -209,7 +208,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <TooltipProvider>
             <ErrorBoundary>
               {!hideGlobalHeader && <Header />}
-              {!hideGlobalHeader && isAuthed && user?.role !== "admin" && <DemoBanner />}
               <div className={isAuthed && !hideGlobalHeader ? "pb-20 md:pb-0" : undefined}>
                 <RichTextSettingsProvider>
                   <TanstackQueryProvider queryClient={queryClient}>
@@ -218,7 +216,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 </RichTextSettingsProvider>
               </div>
               {isAuthed && !hideGlobalHeader && <MobileTabBar />}
-              {isAuthed && !hideGlobalHeader && <CommandMenu isAdmin={user?.role === "admin"} />}
+              {isAuthed && !hideGlobalHeader && <CommandMenu />}
               <Toaster />
             </ErrorBoundary>
             <TanStackDevtools

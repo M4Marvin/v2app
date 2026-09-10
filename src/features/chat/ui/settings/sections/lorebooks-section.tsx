@@ -32,7 +32,6 @@ import type { LoreEntryListItem } from "@/server/fns/lorebooks";
 interface SectionProps {
   chatId: string;
   isStreaming: boolean;
-  isAdmin: boolean;
 }
 
 type EntryDialog =

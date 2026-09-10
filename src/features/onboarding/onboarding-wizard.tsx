@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/questionnaire";
 import {
   onboardingKeys,
-  useClaimAdmin,
   useCompleteOnboarding,
   useOnboardingStatus,
 } from "@/hooks/useOnboarding";
@@ -30,18 +29,15 @@ export function OnboardingWizard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: status, isLoading } = useOnboardingStatus();
-  const claimAdmin = useClaimAdmin();
   const completeOnboarding = useCompleteOnboarding();
 
   const [item, setItem] = useState<string | null>(null);
   const [invalidItem, setInvalidItem] = useState<string | null>(null);
-  const [claiming, setClaiming] = useState(false);
 
   const items = useMemo<QuestionnaireItemDefinition[]>(() => {
     if (!status) return [];
     return [
       { name: "welcome", required: true },
-      ...(status.canClaimAdmin ? [{ name: "account" }] : []),
       ...(status.hasConfiguredProvider ? [] : [{ name: "provider", required: true }]),
       { name: "character", required: true },
       { name: "ready", required: true },
@@ -72,18 +68,6 @@ export function OnboardingWizard() {
   const refreshStatus = () => {
     setInvalidItem(null);
     void queryClient.invalidateQueries({ queryKey: onboardingKeys.status });
-  };
-
-  const handleClaimAdmin = () => {
-    if (claiming || !status?.canClaimAdmin) return;
-    setClaiming(true);
-    claimAdmin.mutate(undefined, {
-      onSuccess: refreshStatus,
-      onError: () => {
-        setClaiming(false);
-        setInvalidItem("account");
-      },
-    });
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -127,11 +111,6 @@ export function OnboardingWizard() {
     >
       <div className="flex items-center justify-between">
         <QuestionnaireProgress />
-        {status.isAdmin ? (
-          <span className="text-xs text-2">Admin account</span>
-        ) : claiming ? (
-          <span className="text-sm text-2">Making you admin...</span>
-        ) : null}
       </div>
 
       <QuestionnaireItem name="welcome" required>
@@ -150,26 +129,6 @@ export function OnboardingWizard() {
           </QuestionnaireChoice>
         </QuestionnaireChoices>
       </QuestionnaireItem>
-
-      {status.canClaimAdmin ? (
-        <QuestionnaireItem name="account" invalid={invalidItem === "account"}>
-          <QuestionnaireTitle>Your account</QuestionnaireTitle>
-          <QuestionnaireDescription>
-            You're the first person here, so you can become the admin. Admins can import characters
-            and manage AI providers.
-          </QuestionnaireDescription>
-          <QuestionnaireChoices>
-            <QuestionnaireChoice value="claim" onClick={handleClaimAdmin}>
-              Make me the admin
-              <QuestionnaireChoiceDescription>
-                Recommended for your own install.
-              </QuestionnaireChoiceDescription>
-            </QuestionnaireChoice>
-            <QuestionnaireChoice value="later">Skip for now</QuestionnaireChoice>
-          </QuestionnaireChoices>
-          <QuestionnaireError>Could not claim admin. Try again.</QuestionnaireError>
-        </QuestionnaireItem>
-      ) : null}
 
       {!status.hasConfiguredProvider ? (
         <QuestionnaireItem name="provider" required invalid={invalidItem === "provider"}>
@@ -190,11 +149,7 @@ export function OnboardingWizard() {
           Characters come from PNG card files. You can import your own, or keep the ones already
           waiting for you.
         </QuestionnaireDescription>
-        <CharacterStep
-          hasCharacter={status.hasCharacter}
-          isAdmin={status.isAdmin}
-          onImported={refreshStatus}
-        />
+        <CharacterStep hasCharacter={status.hasCharacter} onImported={refreshStatus} />
         <QuestionnaireChoices>
           <QuestionnaireChoice value="continue">
             {status.hasCharacter ? "Continue" : "Continue without importing"}
@@ -206,7 +161,6 @@ export function OnboardingWizard() {
       <QuestionnaireItem name="ready" required invalid={invalidItem === "ready"}>
         <QuestionnaireTitle>You're all set</QuestionnaireTitle>
         <QuestionnaireDescription>
-          {status.isAdmin ? "You're an admin. " : ""}
           {status.hasConfiguredProvider ? "Your AI provider is connected. " : ""}
           {status.hasCharacter ? "You have characters to talk to. " : ""}
           Click Start chatting to open your chat list.

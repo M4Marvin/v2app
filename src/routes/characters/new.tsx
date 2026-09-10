@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Upload, ArrowLeft, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorBanner } from "@/components/common/ErrorBanner";
-import { authClient } from "@/lib/auth-client";
 import { fileToBase64, useImportCharacter } from "@/hooks/useCharacters";
 import { previewCharacter } from "@/server/fns/characters";
 import type { PreviewResult } from "@/server/fns/characters";
@@ -18,12 +17,6 @@ export const Route = createFileRoute("/characters/new")({
 
 export function NewCharacterPage() {
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
-  const isDemo = session?.user?.role !== "admin";
-
-  useEffect(() => {
-    if (session && isDemo) void navigate({ to: "/characters" });
-  }, [session, isDemo, navigate]);
 
   const [step, setStep] = useState<"pick" | "preview">("pick");
   const [file, setFile] = useState<File | null>(null);
