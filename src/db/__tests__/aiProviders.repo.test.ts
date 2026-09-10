@@ -1,20 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { makeTestDb, type TestDb, type TestSqlite } from "./helpers";
 import {
-  ensureGlobalAiProviderExists,
-  getGlobalAiProvider,
-  upsertGlobalAiProvider,
+  createAiProvider,
+  deleteAiProvider,
+  getAiProvider,
+  listAiProviders,
+  updateAiProvider,
 } from "@/db/repositories/aiProviders";
 
-const FALLBACK = {
-  name: "Built-in",
-  baseUrl: "https://local-test.example/v1",
-  apiKey: "placeholder-key",
-  defaultModel: null as string | null,
-  defaultHeaders: null as Record<string, string> | null,
-};
-
-describe("ensureGlobalAiProviderExists", () => {
+describe("aiProviders repo", () => {
   let db: TestDb;
   let sqlite: TestSqlite;
 
@@ -28,47 +22,115 @@ describe("ensureGlobalAiProviderExists", () => {
     sqlite.close();
   });
 
-  it("inserts a global provider when none exists", async () => {
-    await ensureGlobalAiProviderExists(FALLBACK, db);
-
-    const provider = await getGlobalAiProvider(db);
-    expect(provider.name).toBe(FALLBACK.name);
-    expect(provider.baseUrl).toBe(FALLBACK.baseUrl);
-    expect(provider.apiKey).toBe(FALLBACK.apiKey);
-    expect(provider.defaultModel).toBeNull();
-    expect(provider.defaultHeaders).toBeNull();
-    expect(provider.userId).toBeNull();
+  it("throws on get for a missing provider", async () => {
+    await expect(getAiProvider("missing", db)).rejects.toThrow("Provider not found");
   });
 
-  it("is a no-op when a global provider already exists", async () => {
-    await ensureGlobalAiProviderExists(FALLBACK, db);
-    const first = await getGlobalAiProvider(db);
-
-    await ensureGlobalAiProviderExists({ ...FALLBACK, name: "Should Not Be Set" }, db);
-    const second = await getGlobalAiProvider(db);
-
-    expect(second.name).toBe(first.name);
-    expect(second.baseUrl).toBe(first.baseUrl);
-    expect(second.apiKey).toBe(first.apiKey);
-  });
-
-  it("does not overwrite admin-configured values", async () => {
-    await upsertGlobalAiProvider(
+  it("creates a provider and round-trips the decrypted api key", async () => {
+    await createAiProvider(
       {
-        name: "Real Provider",
-        baseUrl: "https://real.example/v1",
-        apiKey: "real-api-key",
-        defaultModel: "real-model",
+        id: "prov-1",
+        name: "OpenAI",
+        baseUrl: "https://api.example/v1",
+        apiKey: "secret-key",
+        defaultModel: "gpt-4o",
+        defaultHeaders: { "X-Test": "1" },
       },
       db,
     );
 
-    await ensureGlobalAiProviderExists(FALLBACK, db);
+    const provider = await getAiProvider("prov-1", db);
+    expect(provider.id).toBe("prov-1");
+    expect(provider.name).toBe("OpenAI");
+    expect(provider.baseUrl).toBe("https://api.example/v1");
+    expect(provider.apiKey).toBe("secret-key");
+    expect(provider.defaultModel).toBe("gpt-4o");
+    expect(provider.defaultHeaders).toEqual({ "X-Test": "1" });
+  });
 
-    const provider = await getGlobalAiProvider(db);
-    expect(provider.name).toBe("Real Provider");
-    expect(provider.baseUrl).toBe("https://real.example/v1");
-    expect(provider.apiKey).toBe("real-api-key");
-    expect(provider.defaultModel).toBe("real-model");
+  it("defaults optional fields to null", async () => {
+    await createAiProvider(
+      { id: "prov-1", name: "Bare", baseUrl: "https://a.example/v1", apiKey: "k" },
+      db,
+    );
+    const provider = await getAiProvider("prov-1", db);
+    expect(provider.defaultModel).toBeNull();
+    expect(provider.defaultHeaders).toBeNull();
+  });
+
+  it("lists providers ordered by name", async () => {
+    await createAiProvider(
+      { id: "prov-1", name: "Zeta", baseUrl: "https://z.example/v1", apiKey: "k" },
+      db,
+    );
+    await createAiProvider(
+      { id: "prov-2", name: "Alpha", baseUrl: "https://a.example/v1", apiKey: "k" },
+      db,
+    );
+    const list = await listAiProviders(db);
+    expect(list.map((p) => p.name)).toEqual(["Alpha", "Zeta"]);
+  });
+
+  it("updates only the provided fields", async () => {
+    await createAiProvider(
+      {
+        id: "prov-1",
+        name: "Old",
+        baseUrl: "https://old.example/v1",
+        apiKey: "old-key",
+        defaultModel: "old-model",
+      },
+      db,
+    );
+
+    const updated = await updateAiProvider("prov-1", { name: "New", apiKey: "new-key" }, db);
+    expect(updated.name).toBe("New");
+    expect(updated.apiKey).toBe("new-key");
+    expect(updated.baseUrl).toBe("https://old.example/v1");
+    expect(updated.defaultModel).toBe("old-model");
+  });
+
+  it("throws when updating a missing provider", async () => {
+    await expect(updateAiProvider("missing", { name: "X" }, db)).rejects.toThrow(
+      "Provider not found",
+    );
+  });
+
+  it("deletes a provider", async () => {
+    await createAiProvider(
+      { id: "prov-1", name: "Doomed", baseUrl: "https://a.example/v1", apiKey: "k" },
+      db,
+    );
+    await deleteAiProvider("prov-1", db);
+    await expect(getAiProvider("prov-1", db)).rejects.toThrow("Provider not found");
+  });
+
+  it("throws when deleting a missing provider", async () => {
+    await expect(deleteAiProvider("missing", db)).rejects.toThrow("Provider not found");
+  });
+
+  it("enforces unique provider names on create", async () => {
+    await createAiProvider(
+      { id: "prov-1", name: "Duplicate", baseUrl: "https://a.example/v1", apiKey: "k" },
+      db,
+    );
+    await expect(
+      createAiProvider(
+        { id: "prov-2", name: "Duplicate", baseUrl: "https://b.example/v1", apiKey: "k" },
+        db,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("enforces unique provider names on update", async () => {
+    await createAiProvider(
+      { id: "prov-1", name: "Taken", baseUrl: "https://a.example/v1", apiKey: "k" },
+      db,
+    );
+    await createAiProvider(
+      { id: "prov-2", name: "Other", baseUrl: "https://b.example/v1", apiKey: "k" },
+      db,
+    );
+    await expect(updateAiProvider("prov-2", { name: "Taken" }, db)).rejects.toThrow();
   });
 });

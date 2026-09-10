@@ -5,7 +5,6 @@ import type { OnboardingStatus } from "@/server/fns/onboarding";
 
 const navigate = vi.fn();
 const invalidateQueries = vi.fn();
-const claimAdmin = vi.fn();
 const completeOnboarding = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
@@ -22,7 +21,6 @@ vi.mock("@tanstack/react-query", async (importOriginal) => {
 
 vi.mock("@/hooks/useOnboarding", () => ({
   onboardingKeys: { status: ["onboardingStatus"] },
-  useClaimAdmin: () => ({ mutate: claimAdmin, isPending: false }),
   useCompleteOnboarding: () => ({ mutate: completeOnboarding, isPending: false }),
   useOnboardingStatus: () => ({ data: mockStatus, isLoading: false }),
 }));
@@ -40,9 +38,6 @@ let mockStatus: OnboardingStatus;
 function baseStatus(overrides: Partial<OnboardingStatus> = {}): OnboardingStatus {
   return {
     completed: false,
-    isAdmin: false,
-    adminExists: false,
-    canClaimAdmin: true,
     hasConfiguredProvider: false,
     hasCharacter: false,
     ...overrides,
@@ -77,17 +72,6 @@ describe("OnboardingWizard", () => {
     expect(screen.queryByTestId("provider-step")).toBeNull();
   });
 
-  it("shows the claim-admin step when claimable", () => {
-    render(<OnboardingWizard />);
-    expect(screen.getByText("Make me the admin")).toBeTruthy();
-  });
-
-  it("hides the claim-admin step when an admin already exists", () => {
-    mockStatus = baseStatus({ canClaimAdmin: false, adminExists: true });
-    render(<OnboardingWizard />);
-    expect(screen.queryByText("Make me the admin")).toBeNull();
-  });
-
   it("shows the character step", () => {
     render(<OnboardingWizard />);
     expect(screen.getByTestId("character-step")).toBeTruthy();
@@ -95,7 +79,6 @@ describe("OnboardingWizard", () => {
 
   it("submits and navigates to /chat on success", async () => {
     mockStatus = baseStatus({
-      canClaimAdmin: false,
       hasConfiguredProvider: true,
       hasCharacter: true,
     });
@@ -115,7 +98,6 @@ describe("OnboardingWizard", () => {
 
   it("moves to the character step when completion fails for a missing character", async () => {
     mockStatus = baseStatus({
-      canClaimAdmin: false,
       hasConfiguredProvider: true,
       hasCharacter: true,
     });

@@ -34,28 +34,28 @@ const SwipeSchema = Schema.Struct({
 export const appendUserAndReplyFn = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(SendMessageSchema)(data))
   .handler(async ({ data }) => {
-    const { user } = await getSession();
-    return appendUserAndReply(user.id, data.chatId, data.content, "");
+    await getSession();
+    return appendUserAndReply(data.chatId, data.content, "");
   });
 
 export const deleteBranchFn = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(DeleteMessageSchema)(data))
   .handler(async ({ data }) => {
-    const { user } = await getSession();
-    return deleteBranch(user.id, data.chatId, data.messageLocalId);
+    await getSession();
+    return deleteBranch(data.chatId, data.messageLocalId);
   });
 
 export const editMessageFn = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(EditMessageSchema)(data))
   .handler(async ({ data }) => {
-    const { user } = await getSession();
-    editMessage(user.id, data.chatId, data.messageLocalId, data.content);
+    await getSession();
+    editMessage(data.chatId, data.messageLocalId, data.content);
     return { messageLocalId: data.messageLocalId, content: data.content };
   });
 
 export const swipeFn = createServerFn({ method: "POST", strict: { output: false } })
   .validator((data) => Schema.decodeUnknownSync(SwipeSchema)(data))
   .handler(async ({ data }) => {
-    const { user } = await getSession();
-    return swipe(user.id, data.chatId, data.messageLocalId, data.direction, data.createIfMissing);
+    await getSession();
+    return swipe(data.chatId, data.messageLocalId, data.direction, data.createIfMissing);
   });

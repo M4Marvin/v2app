@@ -170,26 +170,25 @@ function validateUpdateEntryInput(data: unknown): {
 
 export const listLorebooks = createServerFn({ method: "GET" }).handler(
   async (): Promise<LorebookListItem[]> => {
-    const { user } = await getSession();
-    return repoList(user.id);
+    await getSession();
+    return repoList();
   },
 );
 
 export const getLorebook = createServerFn({ method: "GET", strict: { output: false } })
   .validator(validateId)
   .handler(async ({ data }): Promise<Lorebook> => {
-    const { user } = await getSession();
-    return repoGet(user.id, data.id);
+    await getSession();
+    return repoGet(data.id);
   });
 
 export const createLorebook = createServerFn({ method: "POST" })
   .validator(validateCreateLorebookInput)
   .handler(async ({ data }): Promise<{ id: string; name: string }> => {
-    const { user } = await getSession();
+    await getSession();
     const id = randomUUID();
     const row = repoCreate({
       id,
-      userId: user.id,
       name: data.name,
       description: data.description ?? null,
       config: { ...DEFAULT_LORE_CONFIG } as LoreConfig,
@@ -200,27 +199,27 @@ export const createLorebook = createServerFn({ method: "POST" })
 export const updateLorebook = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateLorebookInput)
   .handler(async ({ data }): Promise<Lorebook> => {
-    const { user } = await getSession();
+    await getSession();
     const patch: Partial<Pick<Lorebook, "name" | "description" | "config">> = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.description !== undefined) patch.description = data.description;
     if (data.config !== undefined) patch.config = data.config as LoreConfig;
-    return repoUpdate(user.id, data.id, patch);
+    return repoUpdate(data.id, patch);
   });
 
 export const deleteLorebook = createServerFn({ method: "POST" })
   .validator(validateId)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    repoDelete(user.id, data.id);
+    await getSession();
+    repoDelete(data.id);
     return { id: data.id };
   });
 
 export const listLorebookEntries = createServerFn({ method: "GET" })
   .validator(validateLorebookIdInput)
   .handler(async ({ data }): Promise<LoreEntryListItem[]> => {
-    const { user } = await getSession();
-    return repoListEntries(user.id, data.lorebookId).map((e) => ({
+    await getSession();
+    return repoListEntries(data.lorebookId).map((e) => ({
       id: e.id,
       uid: e.uid,
       data: e.data,
@@ -234,8 +233,8 @@ export const listLorebookEntries = createServerFn({ method: "GET" })
 export const createLorebookEntry = createServerFn({ method: "POST" })
   .validator(validateCreateEntryInput)
   .handler(async ({ data }): Promise<{ id: string; uid: number }> => {
-    const { user } = await getSession();
-    const uid = repoNextEntryUid(user.id, data.lorebookId);
+    await getSession();
+    const uid = repoNextEntryUid(data.lorebookId);
     const draft = {
       ...DEFAULT_LORE_ENTRY,
       uid,
@@ -259,7 +258,7 @@ export const createLorebookEntry = createServerFn({ method: "POST" })
     };
     const validated = LoreEntrySchema(draft);
     if (validated instanceof type.errors) throw new Error("Invalid entry data");
-    const row = repoCreateEntry(user.id, {
+    const row = repoCreateEntry({
       id: randomUUID(),
       lorebookId: data.lorebookId,
       uid,
@@ -271,17 +270,17 @@ export const createLorebookEntry = createServerFn({ method: "POST" })
 export const updateLorebookEntry = createServerFn({ method: "POST", strict: { output: false } })
   .validator(validateUpdateEntryInput)
   .handler(async ({ data }): Promise<LoreEntry> => {
-    const { user } = await getSession();
+    await getSession();
     const patch: Partial<Pick<LoreEntry, "uid" | "data">> = { data: data.data };
     if (data.uid !== undefined) patch.uid = data.uid;
-    return repoUpdateEntry(user.id, data.lorebookId, data.entryId, patch);
+    return repoUpdateEntry(data.lorebookId, data.entryId, patch);
   });
 
 export const deleteLorebookEntry = createServerFn({ method: "POST" })
   .validator(validateEntryRefInput)
   .handler(async ({ data }): Promise<{ id: string }> => {
-    const { user } = await getSession();
-    repoDeleteEntry(user.id, data.lorebookId, data.entryId);
+    await getSession();
+    repoDeleteEntry(data.lorebookId, data.entryId);
     return { id: data.entryId };
   });
 
@@ -299,7 +298,7 @@ export const importLorebook = createServerFn({ method: "POST" })
       entriesInserted: number;
       entriesSkipped: number;
     }> => {
-      const { user } = await getSession();
-      return importWorldFile(data.content, user.id);
+      await getSession();
+      return importWorldFile(data.content);
     },
   );

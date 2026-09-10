@@ -26,7 +26,6 @@ import {
 import type { DB } from "@/db";
 
 export type ImportError =
-  | { kind: "demo_restricted"; message: string }
   | { kind: "invalid_png"; message: string }
   | { kind: "validation"; errors: { field: string; message: string }[] }
   | { kind: "save_failed"; message: string };
@@ -127,7 +126,6 @@ export type PreviewResult = {
 
 export function previewCharacterCard(
   pngBase64: string,
-  userId: string,
   db?: DB,
 ): { ok: true; data: PreviewResult } | { ok: false; error: ImportError } {
   const parsed = parseAndValidateCard(pngBase64);
@@ -142,7 +140,7 @@ export function previewCharacterCard(
   const descriptionExcerpt = (cardData.description || "").slice(0, 280);
 
   const name = deriveDisplayName(cardData);
-  const duplicate = repoList(userId, db).find((c) => c.name.toLowerCase() === name.toLowerCase());
+  const duplicate = repoList(db).find((c) => c.name.toLowerCase() === name.toLowerCase());
 
   return {
     ok: true,
@@ -163,11 +161,7 @@ export function previewCharacterCard(
   };
 }
 
-export async function importCharacterCard(
-  pngBase64: string,
-  userId: string,
-  db?: DB,
-): Promise<ImportResult> {
+export async function importCharacterCard(pngBase64: string, db?: DB): Promise<ImportResult> {
   const parsed = parseAndValidateCard(pngBase64);
   if (!parsed.ok) return parsed;
 
@@ -197,7 +191,6 @@ export async function importCharacterCard(
     const character = repoCreate(
       {
         id,
-        userId,
         name,
         data: cardData,
         imagePath: storedPath,
@@ -211,14 +204,13 @@ export async function importCharacterCard(
     if (cardData.character_book?.entries?.length) {
       const standalone = convertCharacterBookToStandalone(cardData.character_book, name);
       if (standalone.entries.length > 0) {
-        const exists = repoListLorebooks(userId, db).some((lb) => lb.name === standalone.name);
+        const exists = repoListLorebooks(db).some((lb) => lb.name === standalone.name);
         if (!exists) {
           try {
             const lbId = randomUUID();
             repoCreateLorebook(
               {
                 id: lbId,
-                userId,
                 name: standalone.name,
                 description: standalone.description,
                 config: standalone.config,
@@ -229,7 +221,6 @@ export async function importCharacterCard(
             for (const entry of standalone.entries) {
               try {
                 repoCreateLoreEntry(
-                  userId,
                   { id: randomUUID(), lorebookId: lbId, uid: entry.uid, data: entry },
                   db,
                 );

@@ -6,7 +6,7 @@ Your private AI roleplay app. This guide collection shows you how to use it.
 
 Charon is a self-hosted web app for roleplaying with AI characters. It runs at http://localhost:3000 and opens in your browser.
 
-Everything stays on your machine: a local SQLite file, no cloud, no telemetry, no accounts except yours. You are the only user and admin.
+Everything stays on your machine: a local SQLite file, no cloud, no telemetry, no accounts except yours. You are the only user.
 
 You need an AI provider (a service that powers the AI, like OpenAI or Ollama) and character cards to import.
 
@@ -33,7 +33,7 @@ The app has a character library, branching chats, lorebooks, personas, presets, 
 - **Impersonate** — the AI drafts your next message in your persona's voice; review and send.
 - **Continue** — press Enter with an empty input; the AI keeps the scene going.
 - **Markdown** — simple formatting (bold, italic, code blocks, tables, images).
-- **Admin** — the account that manages the app. On your install, that's you.
+- **Account** — the single account that runs the app. On your install, that's you.
 
 ## How Charon thinks
 

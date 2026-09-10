@@ -9,9 +9,16 @@ export type TestSqlite = ReturnType<typeof Database>;
 
 export function makeTestDb(): { db: TestDb; sqlite: TestSqlite } {
   const sqlite = new Database(":memory:");
-  sqlite.pragma("foreign_keys = ON");
   const db = drizzle(sqlite, { schema });
-  migrate(db, { migrationsFolder: "./drizzle" });
+  // Mirror src/db/index.ts: migrations rebuild tables, so they run with FK
+  // enforcement off, then it is re-enabled for the test body. The
+  // single_account_admission trigger stays in place — exactly one user row.
+  sqlite.pragma("foreign_keys = OFF");
+  try {
+    migrate(db, { migrationsFolder: "./drizzle" });
+  } finally {
+    sqlite.pragma("foreign_keys = ON");
+  }
   return { db, sqlite };
 }
 
@@ -21,22 +28,6 @@ export function seedTestUser(db: TestDb, id = "user-1"): string {
     .values({
       id,
       name: "Test User",
-      email: `${id}@test.local`,
-      username: id,
-      displayUsername: id,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .run();
-  return id;
-}
-
-export function seedSecondUser(db: TestDb, id = "user-2"): string {
-  const now = new Date();
-  db.insert(user)
-    .values({
-      id,
-      name: "Other User",
       email: `${id}@test.local`,
       username: id,
       displayUsername: id,

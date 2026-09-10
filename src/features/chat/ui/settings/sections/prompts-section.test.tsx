@@ -23,9 +23,7 @@ import { PromptsSection } from "./prompts-section";
 
 describe("PromptsSection", () => {
   it("commits a typed image prompt example on blur", () => {
-    const { container } = render(
-      <PromptsSection chatId="c1" isStreaming={false} isAdmin={false} />,
-    );
+    const { container } = render(<PromptsSection chatId="c1" isStreaming={false} />);
 
     const textarea = container.querySelector("#ps-image-prompt-example");
     expect(textarea).not.toBeNull();
@@ -41,9 +39,7 @@ describe("PromptsSection", () => {
   });
 
   it("still renders and commits the impersonation prompt (regression)", () => {
-    const { container } = render(
-      <PromptsSection chatId="c1" isStreaming={false} isAdmin={false} />,
-    );
+    const { container } = render(<PromptsSection chatId="c1" isStreaming={false} />);
 
     const textarea = container.querySelector("#ps-impersonate");
     expect(textarea).not.toBeNull();

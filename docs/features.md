@@ -2,33 +2,6 @@
 
 Charon is a self-hosted AI character chat platform. Import character cards, build lorebooks, connect any LLM provider, and have branching roleplay conversations.
 
-## Two tiers
-
-### Admin
-
-The person who runs the server. An admin can:
-
-- Import, edit, and delete characters
-- Manage AI providers, presets, and generation parameters
-- Create, edit, and delete lorebooks
-- Upload and manage background scenes
-- Manage user accounts — invite new users, promote/demote admins, ban/unban
-- Configure a shared AI provider that all demo users talk through
-
-Admins also get the full chat experience, plus a settings panel in every chat to switch providers, pick models, adjust presets, and tweak character overrides.
-
-### Demo users
-
-Casual chatters invited to the server. They can:
-
-- Start conversations with any public character
-- Browse the full character library and lorebook library
-- Use all the chat features — branching, swiping, regenerating, impersonation
-- Create and manage their own personas
-- Upload custom chat scenes
-
-They cannot import, edit, or delete characters, providers, presets, lorebooks, or other users. Chats use the shared AI provider configured by the admin. A daily generation limit applies.
-
 ## Chats
 
 ### Chat list
@@ -54,7 +27,7 @@ An immersive full-screen conversation view with a blurred backdrop and glassy me
 - **Scene** — a visual backdrop for the conversation. Pick a background from the library, upload your own custom scene image, or clear it
 
 **Chat settings** (accessible from inside any conversation):
-- **Connection** (admin) — switch AI providers, test latency, pick a model, or choose a generation preset
+- **Connection** — switch AI providers, test latency, pick a model, or choose a generation preset
 - **Persona** — who you are in the conversation. Create multiple personas with a name, description, and icon; switch between them on the fly
 - **Lorebooks** — toggle world lore on and off per chat, expand to enable or disable individual lore entries, import lorebook JSON files
 - **Prompts** — customize your system prompt, post-history instructions, and impersonation prompt. Changes are saved and specific to this chat
@@ -69,7 +42,7 @@ An immersive full-screen conversation view with a blurred backdrop and glassy me
 
 Browse all characters on the server in a responsive card grid. Each card shows the character's avatar, name, tagline, creator, tags, and how many chats they've been in. Search by name or tag, sort by recency, name, or popularity. Infinite scroll loads more as you browse.
 
-### Importing characters (admin)
+### Importing characters
 
 Drag and drop a PNG character card (up to 50MB) to add a new character to the server. The import preview shows the character's portrait, description, tags, greetings, and a warning if a character with the same name already exists.
 
@@ -87,7 +60,7 @@ Everything you'd want to know about a character in one page:
 
 From the detail page you can **Start Chat** to begin a new conversation, or pick up where you left off from your most recent chats with that character.
 
-### Editing characters (admin)
+### Editing characters
 
 Edit any character's card data: name, tagline, description, personality, scenario, greetings, example messages, system prompts, tags, and talkativeness. A save bar tracks unsaved changes and confirms before discarding.
 
@@ -109,15 +82,11 @@ Open a lorebook to see all its entries. Search, filter by active/disabled status
 - Constant mode — always active regardless of keywords
 - Disabled toggle — turn off an entry without deleting it
 
-## AI Providers & Presets (admin)
+## AI Providers & Presets
 
 ### Providers
 
 Connect any OpenAI-compatible endpoint — local Ollama, Anthropic, Gemini, or your own custom provider. Each provider stores its base URL and API key. Test the connection to verify latency and see available models. Set a default provider, or pick a specific model for individual chats.
-
-### Demo provider
-
-Set up one shared AI provider that all demo users on the server talk through. No per-user configuration needed — demo users just start chatting. Changes take effect immediately.
 
 ### Presets
 
@@ -132,14 +101,6 @@ Toggles for how chats are displayed: highlight character dialogue, auto-fix Mark
 ### Profile
 
 See your username and change your password. Changing your password signs out all other sessions.
-
-## Admin panel
-
-### User management
-
-See all accounts on the server in a searchable, filterable table. Make another user an admin (or remove admin status), ban users with an optional reason and expiry date, unban them, or delete accounts. Invite a new user by creating their account — generated credentials are shown with copy buttons.
-
-The last admin on the server cannot be deleted or removed.
 
 ## Cross-cutting behavior
 

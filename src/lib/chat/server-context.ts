@@ -51,10 +51,10 @@ export interface BuildChatPromptInput {
   userName: string;
   userPersona?: string;
   // Caller-filtered lorebook entries to merge with the character's
-  // embedded book. Already filtered for: enabled lorebooks, per-user
-  // entry disables. `context-builder` also pre-filters data.disable.
+  // embedded book. Already filtered for: enabled lorebooks, entry
+  // disables. `context-builder` also pre-filters data.disable.
   extraLoreEntries?: LoreEntry[];
-  // Per-user prompt overrides from user_settings. The system prompt is
+  // Prompt overrides from user_settings. The system prompt is
   // injected as the first system message; post-history instructions
   // replace the character's when set.
   userSystemPrompt?: string;

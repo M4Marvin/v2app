@@ -21,7 +21,6 @@ export type CharacterDetail = Character & {
 
 export type CreateCharacterInput = {
   id: string;
-  userId: string;
   name: string;
   data: CharacterDataV2;
   imagePath?: string | null;
@@ -32,8 +31,8 @@ export type CreateCharacterInput = {
   specVersion?: "2.0" | "3.0";
 };
 
-export function listCharacters(userId: string, db: DB = defaultDb): Character[] {
-  return db.select().from(characters).where(eq(characters.userId, userId)).all();
+export function listCharacters(db: DB = defaultDb): Character[] {
+  return db.select().from(characters).all();
 }
 
 function escapeLike(pattern: string): string {
@@ -49,11 +48,10 @@ export type SearchParams = {
 };
 
 export function searchCharacterCards(
-  userId: string,
   opts: SearchParams,
   db: DB = defaultDb,
 ): { items: CharacterCardItem[]; total: number } {
-  const conditions: ReturnType<typeof sql>[] = [eq(characters.userId, userId)];
+  const conditions: ReturnType<typeof sql>[] = [];
 
   if (opts.q && opts.q.trim()) {
     const q = `%${escapeLike(opts.q.trim())}%`;
@@ -122,35 +120,23 @@ export function searchCharacterCards(
   return { items, total };
 }
 
-export function characterTagCounts(
-  userId: string,
-  db: DB = defaultDb,
-): { name: string; count: number }[] {
+export function characterTagCounts(db: DB = defaultDb): { name: string; count: number }[] {
   type Row = { name: string; count: number };
   return db.all<Row>(
     sql`SELECT json_each.value AS name, count(*) AS count
         FROM characters, json_each(characters.tags)
-        WHERE characters.user_id = ${userId}
         GROUP BY json_each.value
         ORDER BY json_each.value`,
   );
 }
 
-export function getCharacter(userId: string, id: string, db: DB = defaultDb): Character {
-  const row = db
-    .select()
-    .from(characters)
-    .where(and(eq(characters.id, id), eq(characters.userId, userId)))
-    .get();
+export function getCharacter(id: string, db: DB = defaultDb): Character {
+  const row = db.select().from(characters).where(eq(characters.id, id)).get();
   if (!row) throw new Error("Character not found");
   return row;
 }
 
-export function getCharacterDetail(
-  userId: string,
-  id: string,
-  db: DB = defaultDb,
-): CharacterDetail {
+export function getCharacterDetail(id: string, db: DB = defaultDb): CharacterDetail {
   const row = db
     .select({
       character: characters,
@@ -167,7 +153,7 @@ export function getCharacterDetail(
     .from(characters)
     .leftJoin(chats, eq(chats.characterId, characters.id))
     .leftJoin(chatMessages, and(eq(chatMessages.chatId, chats.id), eq(chatMessages.role, "user")))
-    .where(and(eq(characters.id, id), eq(characters.userId, userId)))
+    .where(eq(characters.id, id))
     .groupBy(characters.id)
     .get();
 
@@ -194,7 +180,6 @@ export function createCharacter(input: CreateCharacterInput, db: DB = defaultDb)
     .insert(characters)
     .values({
       id: input.id,
-      userId: input.userId,
       name: input.name,
       data: input.data,
       imagePath: input.imagePath ?? null,
@@ -212,7 +197,6 @@ export function createCharacter(input: CreateCharacterInput, db: DB = defaultDb)
 }
 
 export function updateCharacter(
-  userId: string,
   id: string,
   patch: Partial<
     Pick<NewCharacter, "name" | "data" | "spec" | "specVersion" | "imagePath" | "tagline">
@@ -223,29 +207,26 @@ export function updateCharacter(
   const row = db
     .update(characters)
     .set({ ...patch, ...derived, updatedAt: new Date() })
-    .where(and(eq(characters.id, id), eq(characters.userId, userId)))
+    .where(eq(characters.id, id))
     .returning()
     .get();
   if (!row) throw new Error("Character not found");
   return row;
 }
 
-export function deleteCharacter(userId: string, id: string, db: DB = defaultDb): void {
+export function deleteCharacter(id: string, db: DB = defaultDb): void {
   // Manually delete chats and messages first since FK enforcement is off in dev.db
   // (mirrors deleteChat in src/db/repositories/chats.ts:148-158).
   const chatIds = db
     .select({ id: chats.id })
     .from(chats)
-    .where(and(eq(chats.characterId, id), eq(chats.userId, userId)))
+    .where(eq(chats.characterId, id))
     .all()
     .map((r) => r.id);
   if (chatIds.length > 0) {
     db.delete(chatMessages).where(inArray(chatMessages.chatId, chatIds)).run();
     db.delete(chats).where(inArray(chats.id, chatIds)).run();
   }
-  const result = db
-    .delete(characters)
-    .where(and(eq(characters.id, id), eq(characters.userId, userId)))
-    .run();
+  const result = db.delete(characters).where(eq(characters.id, id)).run();
   if (result.changes === 0) throw new Error("Character not found");
 }

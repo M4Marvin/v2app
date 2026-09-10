@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { makeTestDb, seedSecondUser, seedTestUser, type TestDb } from "@/db/__tests__/helpers";
+import { makeTestDb, type TestDb } from "@/db/__tests__/helpers";
 import {
   createPersona,
   deletePersona,
@@ -10,14 +10,12 @@ import {
 
 describe("personas repository", () => {
   let db: TestDb;
-  let userId: string;
 
   let ctx: ReturnType<typeof makeTestDb>;
 
   beforeEach(() => {
     ctx = makeTestDb();
     db = ctx.db;
-    userId = seedTestUser(db);
   });
 
   afterEach(() => {
@@ -26,9 +24,8 @@ describe("personas repository", () => {
 
   describe("createPersona", () => {
     it("inserts a row with required fields and returns it", () => {
-      const row = createPersona({ id: "p-1", userId, name: "Default" }, db);
+      const row = createPersona({ id: "p-1", name: "Default" }, db);
       expect(row.id).toBe("p-1");
-      expect(row.userId).toBe(userId);
       expect(row.name).toBe("Default");
       expect(row.description).toBeNull();
       expect(row.iconPath).toBeNull();
@@ -40,7 +37,6 @@ describe("personas repository", () => {
       const row = createPersona(
         {
           id: "p-1",
-          userId,
           name: "Alice",
           description: "A brave hero",
           iconPath: "uploads/personas/alice.png",
@@ -53,72 +49,66 @@ describe("personas repository", () => {
   });
 
   describe("getPersona", () => {
-    it("throws when accessed by a different user", () => {
-      const otherId = seedSecondUser(db);
-      createPersona({ id: "p-1", userId, name: "X" }, db);
-      expect(() => getPersona(otherId, "p-1", db)).toThrow("Persona not found");
+    it("throws when persona does not exist", () => {
+      expect(() => getPersona("missing", db)).toThrow("Persona not found");
     });
 
-    it("throws when persona does not exist", () => {
-      expect(() => getPersona(userId, "missing", db)).toThrow("Persona not found");
+    it("returns the persona by id", () => {
+      createPersona({ id: "p-1", name: "X" }, db);
+      expect(getPersona("p-1", db).id).toBe("p-1");
     });
   });
 
   describe("listPersonas", () => {
-    it("returns an empty array when user has no personas", () => {
-      expect(listPersonas(userId, db)).toEqual([]);
+    it("returns an empty array when there are no personas", () => {
+      expect(listPersonas(db)).toEqual([]);
     });
 
-    it("returns only the calling user's personas, ordered by name", () => {
-      const otherId = seedSecondUser(db);
-      createPersona({ id: "p-1", userId, name: "Bravo" }, db);
-      createPersona({ id: "p-2", userId, name: "Alpha" }, db);
-      createPersona({ id: "p-3", userId: otherId, name: "Other" }, db);
-      const mine = listPersonas(userId, db);
-      expect(mine).toHaveLength(2);
-      expect(mine.map((p) => p.name)).toEqual(["Alpha", "Bravo"]);
+    it("returns personas ordered by name", () => {
+      createPersona({ id: "p-1", name: "Bravo" }, db);
+      createPersona({ id: "p-2", name: "Alpha" }, db);
+      const all = listPersonas(db);
+      expect(all).toHaveLength(2);
+      expect(all.map((p) => p.name)).toEqual(["Alpha", "Bravo"]);
     });
   });
 
   describe("updatePersona", () => {
     beforeEach(() => {
-      createPersona({ id: "p-1", userId, name: "Old", description: "old desc" }, db);
+      createPersona({ id: "p-1", name: "Old", description: "old desc" }, db);
     });
 
     it("updates name and description", () => {
-      const updated = updatePersona(userId, "p-1", { name: "New", description: "new desc" }, db);
+      const updated = updatePersona("p-1", { name: "New", description: "new desc" }, db);
       expect(updated.name).toBe("New");
       expect(updated.description).toBe("new desc");
     });
 
     it("sets description to null when explicitly cleared", () => {
-      const updated = updatePersona(userId, "p-1", { description: null }, db);
+      const updated = updatePersona("p-1", { description: null }, db);
       expect(updated.description).toBeNull();
     });
 
     it("leaves untouched fields alone", () => {
-      const updated = updatePersona(userId, "p-1", { name: "Renamed" }, db);
+      const updated = updatePersona("p-1", { name: "Renamed" }, db);
       expect(updated.description).toBe("old desc");
     });
 
-    it("throws when accessed by a different user", () => {
-      const otherId = seedSecondUser(db);
-      expect(() => updatePersona(otherId, "p-1", { name: "X" }, db)).toThrow("Persona not found");
+    it("throws when persona does not exist", () => {
+      expect(() => updatePersona("missing", { name: "X" }, db)).toThrow("Persona not found");
     });
   });
 
   describe("deletePersona", () => {
     it("removes the row", () => {
-      createPersona({ id: "p-1", userId, name: "X" }, db);
-      expect(listPersonas(userId, db)).toHaveLength(1);
-      deletePersona(userId, "p-1", db);
-      expect(listPersonas(userId, db)).toEqual([]);
+      createPersona({ id: "p-1", name: "X" }, db);
+      expect(listPersonas(db)).toHaveLength(1);
+      deletePersona("p-1", db);
+      expect(listPersonas(db)).toEqual([]);
     });
 
-    it("throws when accessed by a different user", () => {
-      const otherId = seedSecondUser(db);
-      createPersona({ id: "p-1", userId, name: "X" }, db);
-      expect(() => deletePersona(otherId, "p-1", db)).toThrow("Persona not found");
+    it("throws when persona does not exist", () => {
+      expect(() => deletePersona("missing", db)).toThrow("Persona not found");
     });
   });
 });

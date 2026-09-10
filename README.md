@@ -57,10 +57,9 @@ Upgrading an existing database from an older version? The first boot after the s
 
 ## First-time setup
 
-1. Open http://localhost:3000 and **Sign up** — pick a username and password.
+1. Open http://localhost:3000 and **Create your account** — pick a username and password.
 2. You'll land in the guided **onboarding wizard**, which takes you through the
-   rest: make your account the admin, connect an AI provider, and get a
-   character.
+   rest: connect an AI provider, and get a character.
 3. Click **Start chatting** and you're in — pick a character and type.
 
 Characters not included. Grab some from [Chub](https://chub.ai) or copy `.png` files from a SillyTavern `public/characters/` folder.

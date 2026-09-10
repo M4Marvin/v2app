@@ -9,9 +9,6 @@ import type { OnboardingStatus } from "@/server/fns/onboarding";
 function status(overrides: Partial<OnboardingStatus> = {}): OnboardingStatus {
   return {
     completed: false,
-    isAdmin: false,
-    adminExists: false,
-    canClaimAdmin: true,
     hasConfiguredProvider: false,
     hasCharacter: false,
     ...overrides,

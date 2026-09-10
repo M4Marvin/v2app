@@ -22,6 +22,9 @@ pnpm run dev
 
 Don't have pnpm? `npm install -g pnpm` or see [pnpm.io](https://pnpm.io/installation).
 
+Charon is single-user: the first account created through the first-run setup
+becomes the owner. There is no separate admin CLI step.
+
 ## Project layout
 
 ```
@@ -36,7 +39,7 @@ src/
     fns/                  # createServerFn handlers
     services/             # Importers, model fetcher
     validators.ts         # ArkType input schemas
-    session.ts            # Auth helpers (isAdmin)
+    session.ts            # Auth helpers
   routes/
     chat/                 # Chat routes (/chat, /chat/$id)
     api/
@@ -44,7 +47,7 @@ src/
       characters/$id/avatar.ts
       backgrounds/$id/image.ts
       personas/$id/icon.ts
-    admin/, characters/, settings/, lorebooks/, demo/
+    characters/, settings/, lorebooks/
   components/ui/          # shadcn/ui components
   hooks/                  # TanStack Query hooks
   lib/
@@ -53,8 +56,7 @@ src/
   features/logging/       # Structured logger
 scripts/
   migrate-data.ts         # Legacy SillyTavern importer
-  create-admin.ts         # Bootstrap admin user
-  migrate-to-single-user.ts  # Single-user migration operator (pnpm migrate:single-user)
+migrate-to-single-user.ts  # Single-user migration operator (pnpm migrate:single-user)
 ```
 
 ## Architecture (5 groups)
@@ -68,7 +70,7 @@ UI (presentation) → Generation (AI calls) → Tree (structure) → Data (persi
 - **Tree** — branching messages, lock, active path. Pure ops + I/O service. No AI awareness.
 - **Lock** — generation mutex stored on root message `extra` field. Self-healing stale recovery (5 min).
 - **Generation** — `prepareStream`/`finalizeStream`/`cancelStream`, impersonation, provider resolution, prompt assembly.
-- **Config** — per-user defaults and per-chat overrides for provider, model, preset, lorebooks, persona, prompts.
+- **Config** — app settings and per-chat overrides for provider, model, preset, lorebooks, persona, prompts.
 - **UI** — pages (`/c`, `/c/$id`), components (composer, message list, side panels, settings), hooks.
 
 ## st-core (`src/lib/st-core/`)
@@ -102,13 +104,12 @@ Import with `@/*` (not `#/*`). st-core internal imports use `.js` extensions.
 | Doc | What it covers |
 |---|---|
 | `docs/user/index.md` | End-user docs (non-technical, local single-user): overview & core concepts |
-| `docs/user/getting-started.md` | End-user onboarding: install → admin account → provider → characters → first chat |
+| `docs/user/getting-started.md` | End-user onboarding: install → create account → provider → characters → first chat |
 | `docs/user/chatting.md` | End-user chat guide: swipe, branch, edit, delete, impersonate, continue, shortcuts |
 | `docs/user/characters.md` | End-user character guide: library, import, detail, edit |
 | `docs/user/lorebooks.md` | End-user lorebook guide (activation is global, not per-chat) |
 | `docs/user/personas-scenes-presets.md` | End-user personas, scenes, presets, display options |
 | `docs/user/troubleshooting.md` | End-user FAQ for common local problems |
-| `docs/users.md` | Admin vs user roles, permissions, CLI admin creation (multi-user model) |
 | `docs/markdown.md` | Full rendering pipeline (showdown, DOMPurify, CSS scoping, morphdom streaming) |
 
 ## Commands
@@ -276,5 +277,4 @@ Live in `src/components/common/`. All follow shadcn conventions (spread props, `
 | `ModelCombobox` | Searchable model picker with free-text + refresh |
 | `SectionNav` | Scroll-spy section navigation (left rail desktop, chip scroller mobile) |
 | `SaveBar` | Sticky bottom save bar with dirty-state awareness |
-| `DemoBanner` | Dismissible info banner for demo users |
 | `MobileTabBar` | Fixed bottom navigation (Chats · Characters · New · Lorebooks) |

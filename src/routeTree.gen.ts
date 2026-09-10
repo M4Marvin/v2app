@@ -8,574 +8,532 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as SettingsRouteRouteImport } from './routes/settings/route'
-import { Route as SigninRouteImport } from './routes/signin'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as ApiChatGenerateRouteImport } from './routes/api/chat-generate'
-import { Route as CharactersIndexRouteImport } from './routes/characters/index'
-import { Route as CharactersIdRouteImport } from './routes/characters/$id'
-import { Route as CharactersNewRouteImport } from './routes/characters/new'
-import { Route as ChatIndexRouteImport } from './routes/chat/index'
-import { Route as ChatIdRouteImport } from './routes/chat/$id'
-import { Route as LorebooksIndexRouteImport } from './routes/lorebooks/index'
-import { Route as LorebooksIdRouteImport } from './routes/lorebooks/$id'
-import { Route as LorebooksNewRouteImport } from './routes/lorebooks/new'
-import { Route as SettingsIndexRouteImport } from './routes/settings/index'
-import { Route as SettingsDemoRouteImport } from './routes/settings/demo'
-import { Route as SettingsPreferencesRouteImport } from './routes/settings/preferences'
-import { Route as SettingsPresetsRouteImport } from './routes/settings/presets'
-import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
-import { Route as SettingsProvidersRouteImport } from './routes/settings/providers'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as CharactersIdEditRouteImport } from './routes/characters/$id_.edit'
-import { Route as ApiBackgroundsIdImageRouteImport } from './routes/api/backgrounds/$id/image'
-import { Route as ApiCharactersIdAvatarRouteImport } from './routes/api/characters/$id/avatar'
-import { Route as ApiPersonasIdIconRouteImport } from './routes/api/personas/$id/icon'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as SigninRouteImport } from "./routes/signin";
+import { Route as SetupRouteImport } from "./routes/setup";
+import { Route as OnboardingRouteImport } from "./routes/onboarding";
+import { Route as SettingsRouteRouteImport } from "./routes/settings/route";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as SettingsIndexRouteImport } from "./routes/settings/index";
+import { Route as LorebooksIndexRouteImport } from "./routes/lorebooks/index";
+import { Route as ChatIndexRouteImport } from "./routes/chat/index";
+import { Route as CharactersIndexRouteImport } from "./routes/characters/index";
+import { Route as SettingsProvidersRouteImport } from "./routes/settings/providers";
+import { Route as SettingsProfileRouteImport } from "./routes/settings/profile";
+import { Route as SettingsPresetsRouteImport } from "./routes/settings/presets";
+import { Route as SettingsPreferencesRouteImport } from "./routes/settings/preferences";
+import { Route as LorebooksNewRouteImport } from "./routes/lorebooks/new";
+import { Route as LorebooksIdRouteImport } from "./routes/lorebooks/$id";
+import { Route as ChatIdRouteImport } from "./routes/chat/$id";
+import { Route as CharactersNewRouteImport } from "./routes/characters/new";
+import { Route as CharactersIdRouteImport } from "./routes/characters/$id";
+import { Route as ApiChatGenerateRouteImport } from "./routes/api/chat-generate";
+import { Route as CharactersIdEditRouteImport } from "./routes/characters/$id_.edit";
+import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
+import { Route as ApiPersonasIdIconRouteImport } from "./routes/api/personas/$id/icon";
+import { Route as ApiCharactersIdAvatarRouteImport } from "./routes/api/characters/$id/avatar";
+import { Route as ApiBackgroundsIdImageRouteImport } from "./routes/api/backgrounds/$id/image";
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRouteRoute = SettingsRouteRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SigninRoute = SigninRouteImport.update({
-  id: '/signin',
-  path: '/signin',
+  id: "/signin",
+  path: "/signin",
   getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
+} as any);
+const SetupRoute = SetupRouteImport.update({
+  id: "/setup",
+  path: "/setup",
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/admin/users',
-  path: '/admin/users',
+} as any);
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: "/onboarding",
+  path: "/onboarding",
   getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChatGenerateRoute = ApiChatGenerateRouteImport.update({
-  id: '/api/chat-generate',
-  path: '/api/chat-generate',
+} as any);
+const SettingsRouteRoute = SettingsRouteRouteImport.update({
+  id: "/settings",
+  path: "/settings",
   getParentRoute: () => rootRouteImport,
-} as any)
-const CharactersIndexRoute = CharactersIndexRouteImport.update({
-  id: '/characters/',
-  path: '/characters/',
+} as any);
+const IndexRoute = IndexRouteImport.update({
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
-const CharactersIdRoute = CharactersIdRouteImport.update({
-  id: '/characters/$id',
-  path: '/characters/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CharactersNewRoute = CharactersNewRouteImport.update({
-  id: '/characters/new',
-  path: '/characters/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatIndexRoute = ChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatIdRoute = ChatIdRouteImport.update({
-  id: '/chat/$id',
-  path: '/chat/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LorebooksIndexRoute = LorebooksIndexRouteImport.update({
-  id: '/lorebooks/',
-  path: '/lorebooks/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LorebooksIdRoute = LorebooksIdRouteImport.update({
-  id: '/lorebooks/$id',
-  path: '/lorebooks/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LorebooksNewRoute = LorebooksNewRouteImport.update({
-  id: '/lorebooks/new',
-  path: '/lorebooks/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsDemoRoute = SettingsDemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsPreferencesRoute = SettingsPreferencesRouteImport.update({
-  id: '/preferences',
-  path: '/preferences',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsPresetsRoute = SettingsPresetsRouteImport.update({
-  id: '/presets',
-  path: '/presets',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsProfileRoute = SettingsProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
+} as any);
+const LorebooksIndexRoute = LorebooksIndexRouteImport.update({
+  id: "/lorebooks/",
+  path: "/lorebooks/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ChatIndexRoute = ChatIndexRouteImport.update({
+  id: "/chat/",
+  path: "/chat/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const CharactersIndexRoute = CharactersIndexRouteImport.update({
+  id: "/characters/",
+  path: "/characters/",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const SettingsProvidersRoute = SettingsProvidersRouteImport.update({
-  id: '/providers',
-  path: '/providers',
+  id: "/providers",
+  path: "/providers",
   getParentRoute: () => SettingsRouteRoute,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+} as any);
+const SettingsProfileRoute = SettingsProfileRouteImport.update({
+  id: "/profile",
+  path: "/profile",
+  getParentRoute: () => SettingsRouteRoute,
+} as any);
+const SettingsPresetsRoute = SettingsPresetsRouteImport.update({
+  id: "/presets",
+  path: "/presets",
+  getParentRoute: () => SettingsRouteRoute,
+} as any);
+const SettingsPreferencesRoute = SettingsPreferencesRouteImport.update({
+  id: "/preferences",
+  path: "/preferences",
+  getParentRoute: () => SettingsRouteRoute,
+} as any);
+const LorebooksNewRoute = LorebooksNewRouteImport.update({
+  id: "/lorebooks/new",
+  path: "/lorebooks/new",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
+const LorebooksIdRoute = LorebooksIdRouteImport.update({
+  id: "/lorebooks/$id",
+  path: "/lorebooks/$id",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ChatIdRoute = ChatIdRouteImport.update({
+  id: "/chat/$id",
+  path: "/chat/$id",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const CharactersNewRoute = CharactersNewRouteImport.update({
+  id: "/characters/new",
+  path: "/characters/new",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const CharactersIdRoute = CharactersIdRouteImport.update({
+  id: "/characters/$id",
+  path: "/characters/$id",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ApiChatGenerateRoute = ApiChatGenerateRouteImport.update({
+  id: "/api/chat-generate",
+  path: "/api/chat-generate",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const CharactersIdEditRoute = CharactersIdEditRouteImport.update({
-  id: '/characters/$id_/edit',
-  path: '/characters/$id/edit',
+  id: "/characters/$id_/edit",
+  path: "/characters/$id/edit",
   getParentRoute: () => rootRouteImport,
-} as any)
-const ApiBackgroundsIdImageRoute = ApiBackgroundsIdImageRouteImport.update({
-  id: '/api/backgrounds/$id/image',
-  path: '/api/backgrounds/$id/image',
+} as any);
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: "/api/auth/$",
+  path: "/api/auth/$",
   getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCharactersIdAvatarRoute = ApiCharactersIdAvatarRouteImport.update({
-  id: '/api/characters/$id/avatar',
-  path: '/api/characters/$id/avatar',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ApiPersonasIdIconRoute = ApiPersonasIdIconRouteImport.update({
-  id: '/api/personas/$id/icon',
-  path: '/api/personas/$id/icon',
+  id: "/api/personas/$id/icon",
+  path: "/api/personas/$id/icon",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
+const ApiCharactersIdAvatarRoute = ApiCharactersIdAvatarRouteImport.update({
+  id: "/api/characters/$id/avatar",
+  path: "/api/characters/$id/avatar",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ApiBackgroundsIdImageRoute = ApiBackgroundsIdImageRouteImport.update({
+  id: "/api/backgrounds/$id/image",
+  path: "/api/backgrounds/$id/image",
+  getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRouteWithChildren
-  '/onboarding': typeof OnboardingRoute
-  '/signin': typeof SigninRoute
-  '/signup': typeof SignupRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/api/chat-generate': typeof ApiChatGenerateRoute
-  '/characters/$id': typeof CharactersIdRoute
-  '/characters/new': typeof CharactersNewRoute
-  '/chat/$id': typeof ChatIdRoute
-  '/lorebooks/$id': typeof LorebooksIdRoute
-  '/lorebooks/new': typeof LorebooksNewRoute
-  '/settings/demo': typeof SettingsDemoRoute
-  '/settings/preferences': typeof SettingsPreferencesRoute
-  '/settings/presets': typeof SettingsPresetsRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/settings/providers': typeof SettingsProvidersRoute
-  '/characters/': typeof CharactersIndexRoute
-  '/chat/': typeof ChatIndexRoute
-  '/lorebooks/': typeof LorebooksIndexRoute
-  '/settings/': typeof SettingsIndexRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/characters/$id/edit': typeof CharactersIdEditRoute
-  '/api/backgrounds/$id/image': typeof ApiBackgroundsIdImageRoute
-  '/api/characters/$id/avatar': typeof ApiCharactersIdAvatarRoute
-  '/api/personas/$id/icon': typeof ApiPersonasIdIconRoute
+  "/": typeof IndexRoute;
+  "/settings": typeof SettingsRouteRouteWithChildren;
+  "/onboarding": typeof OnboardingRoute;
+  "/setup": typeof SetupRoute;
+  "/signin": typeof SigninRoute;
+  "/api/chat-generate": typeof ApiChatGenerateRoute;
+  "/characters/$id": typeof CharactersIdRoute;
+  "/characters/new": typeof CharactersNewRoute;
+  "/chat/$id": typeof ChatIdRoute;
+  "/lorebooks/$id": typeof LorebooksIdRoute;
+  "/lorebooks/new": typeof LorebooksNewRoute;
+  "/settings/preferences": typeof SettingsPreferencesRoute;
+  "/settings/presets": typeof SettingsPresetsRoute;
+  "/settings/profile": typeof SettingsProfileRoute;
+  "/settings/providers": typeof SettingsProvidersRoute;
+  "/characters/": typeof CharactersIndexRoute;
+  "/chat/": typeof ChatIndexRoute;
+  "/lorebooks/": typeof LorebooksIndexRoute;
+  "/settings/": typeof SettingsIndexRoute;
+  "/api/auth/$": typeof ApiAuthSplatRoute;
+  "/characters/$id/edit": typeof CharactersIdEditRoute;
+  "/api/backgrounds/$id/image": typeof ApiBackgroundsIdImageRoute;
+  "/api/characters/$id/avatar": typeof ApiCharactersIdAvatarRoute;
+  "/api/personas/$id/icon": typeof ApiPersonasIdIconRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/onboarding': typeof OnboardingRoute
-  '/signin': typeof SigninRoute
-  '/signup': typeof SignupRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/api/chat-generate': typeof ApiChatGenerateRoute
-  '/characters/$id': typeof CharactersIdRoute
-  '/characters/new': typeof CharactersNewRoute
-  '/chat/$id': typeof ChatIdRoute
-  '/lorebooks/$id': typeof LorebooksIdRoute
-  '/lorebooks/new': typeof LorebooksNewRoute
-  '/settings/demo': typeof SettingsDemoRoute
-  '/settings/preferences': typeof SettingsPreferencesRoute
-  '/settings/presets': typeof SettingsPresetsRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/settings/providers': typeof SettingsProvidersRoute
-  '/characters': typeof CharactersIndexRoute
-  '/chat': typeof ChatIndexRoute
-  '/lorebooks': typeof LorebooksIndexRoute
-  '/settings': typeof SettingsIndexRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/characters/$id/edit': typeof CharactersIdEditRoute
-  '/api/backgrounds/$id/image': typeof ApiBackgroundsIdImageRoute
-  '/api/characters/$id/avatar': typeof ApiCharactersIdAvatarRoute
-  '/api/personas/$id/icon': typeof ApiPersonasIdIconRoute
+  "/": typeof IndexRoute;
+  "/onboarding": typeof OnboardingRoute;
+  "/setup": typeof SetupRoute;
+  "/signin": typeof SigninRoute;
+  "/api/chat-generate": typeof ApiChatGenerateRoute;
+  "/characters/$id": typeof CharactersIdRoute;
+  "/characters/new": typeof CharactersNewRoute;
+  "/chat/$id": typeof ChatIdRoute;
+  "/lorebooks/$id": typeof LorebooksIdRoute;
+  "/lorebooks/new": typeof LorebooksNewRoute;
+  "/settings/preferences": typeof SettingsPreferencesRoute;
+  "/settings/presets": typeof SettingsPresetsRoute;
+  "/settings/profile": typeof SettingsProfileRoute;
+  "/settings/providers": typeof SettingsProvidersRoute;
+  "/characters": typeof CharactersIndexRoute;
+  "/chat": typeof ChatIndexRoute;
+  "/lorebooks": typeof LorebooksIndexRoute;
+  "/settings": typeof SettingsIndexRoute;
+  "/api/auth/$": typeof ApiAuthSplatRoute;
+  "/characters/$id/edit": typeof CharactersIdEditRoute;
+  "/api/backgrounds/$id/image": typeof ApiBackgroundsIdImageRoute;
+  "/api/characters/$id/avatar": typeof ApiCharactersIdAvatarRoute;
+  "/api/personas/$id/icon": typeof ApiPersonasIdIconRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRouteWithChildren
-  '/onboarding': typeof OnboardingRoute
-  '/signin': typeof SigninRoute
-  '/signup': typeof SignupRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/api/chat-generate': typeof ApiChatGenerateRoute
-  '/characters/$id': typeof CharactersIdRoute
-  '/characters/new': typeof CharactersNewRoute
-  '/chat/$id': typeof ChatIdRoute
-  '/lorebooks/$id': typeof LorebooksIdRoute
-  '/lorebooks/new': typeof LorebooksNewRoute
-  '/settings/demo': typeof SettingsDemoRoute
-  '/settings/preferences': typeof SettingsPreferencesRoute
-  '/settings/presets': typeof SettingsPresetsRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/settings/providers': typeof SettingsProvidersRoute
-  '/characters/': typeof CharactersIndexRoute
-  '/chat/': typeof ChatIndexRoute
-  '/lorebooks/': typeof LorebooksIndexRoute
-  '/settings/': typeof SettingsIndexRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/characters/$id_/edit': typeof CharactersIdEditRoute
-  '/api/backgrounds/$id/image': typeof ApiBackgroundsIdImageRoute
-  '/api/characters/$id/avatar': typeof ApiCharactersIdAvatarRoute
-  '/api/personas/$id/icon': typeof ApiPersonasIdIconRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/settings": typeof SettingsRouteRouteWithChildren;
+  "/onboarding": typeof OnboardingRoute;
+  "/setup": typeof SetupRoute;
+  "/signin": typeof SigninRoute;
+  "/api/chat-generate": typeof ApiChatGenerateRoute;
+  "/characters/$id": typeof CharactersIdRoute;
+  "/characters/new": typeof CharactersNewRoute;
+  "/chat/$id": typeof ChatIdRoute;
+  "/lorebooks/$id": typeof LorebooksIdRoute;
+  "/lorebooks/new": typeof LorebooksNewRoute;
+  "/settings/preferences": typeof SettingsPreferencesRoute;
+  "/settings/presets": typeof SettingsPresetsRoute;
+  "/settings/profile": typeof SettingsProfileRoute;
+  "/settings/providers": typeof SettingsProvidersRoute;
+  "/characters/": typeof CharactersIndexRoute;
+  "/chat/": typeof ChatIndexRoute;
+  "/lorebooks/": typeof LorebooksIndexRoute;
+  "/settings/": typeof SettingsIndexRoute;
+  "/api/auth/$": typeof ApiAuthSplatRoute;
+  "/characters/$id_/edit": typeof CharactersIdEditRoute;
+  "/api/backgrounds/$id/image": typeof ApiBackgroundsIdImageRoute;
+  "/api/characters/$id/avatar": typeof ApiCharactersIdAvatarRoute;
+  "/api/personas/$id/icon": typeof ApiPersonasIdIconRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/settings'
-    | '/onboarding'
-    | '/signin'
-    | '/signup'
-    | '/admin/users'
-    | '/api/chat-generate'
-    | '/characters/$id'
-    | '/characters/new'
-    | '/chat/$id'
-    | '/lorebooks/$id'
-    | '/lorebooks/new'
-    | '/settings/demo'
-    | '/settings/preferences'
-    | '/settings/presets'
-    | '/settings/profile'
-    | '/settings/providers'
-    | '/characters/'
-    | '/chat/'
-    | '/lorebooks/'
-    | '/settings/'
-    | '/api/auth/$'
-    | '/characters/$id/edit'
-    | '/api/backgrounds/$id/image'
-    | '/api/characters/$id/avatar'
-    | '/api/personas/$id/icon'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/settings"
+    | "/onboarding"
+    | "/setup"
+    | "/signin"
+    | "/api/chat-generate"
+    | "/characters/$id"
+    | "/characters/new"
+    | "/chat/$id"
+    | "/lorebooks/$id"
+    | "/lorebooks/new"
+    | "/settings/preferences"
+    | "/settings/presets"
+    | "/settings/profile"
+    | "/settings/providers"
+    | "/characters/"
+    | "/chat/"
+    | "/lorebooks/"
+    | "/settings/"
+    | "/api/auth/$"
+    | "/characters/$id/edit"
+    | "/api/backgrounds/$id/image"
+    | "/api/characters/$id/avatar"
+    | "/api/personas/$id/icon";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/onboarding'
-    | '/signin'
-    | '/signup'
-    | '/admin/users'
-    | '/api/chat-generate'
-    | '/characters/$id'
-    | '/characters/new'
-    | '/chat/$id'
-    | '/lorebooks/$id'
-    | '/lorebooks/new'
-    | '/settings/demo'
-    | '/settings/preferences'
-    | '/settings/presets'
-    | '/settings/profile'
-    | '/settings/providers'
-    | '/characters'
-    | '/chat'
-    | '/lorebooks'
-    | '/settings'
-    | '/api/auth/$'
-    | '/characters/$id/edit'
-    | '/api/backgrounds/$id/image'
-    | '/api/characters/$id/avatar'
-    | '/api/personas/$id/icon'
+    | "/"
+    | "/onboarding"
+    | "/setup"
+    | "/signin"
+    | "/api/chat-generate"
+    | "/characters/$id"
+    | "/characters/new"
+    | "/chat/$id"
+    | "/lorebooks/$id"
+    | "/lorebooks/new"
+    | "/settings/preferences"
+    | "/settings/presets"
+    | "/settings/profile"
+    | "/settings/providers"
+    | "/characters"
+    | "/chat"
+    | "/lorebooks"
+    | "/settings"
+    | "/api/auth/$"
+    | "/characters/$id/edit"
+    | "/api/backgrounds/$id/image"
+    | "/api/characters/$id/avatar"
+    | "/api/personas/$id/icon";
   id:
-    | '__root__'
-    | '/'
-    | '/settings'
-    | '/onboarding'
-    | '/signin'
-    | '/signup'
-    | '/admin/users'
-    | '/api/chat-generate'
-    | '/characters/$id'
-    | '/characters/new'
-    | '/chat/$id'
-    | '/lorebooks/$id'
-    | '/lorebooks/new'
-    | '/settings/demo'
-    | '/settings/preferences'
-    | '/settings/presets'
-    | '/settings/profile'
-    | '/settings/providers'
-    | '/characters/'
-    | '/chat/'
-    | '/lorebooks/'
-    | '/settings/'
-    | '/api/auth/$'
-    | '/characters/$id_/edit'
-    | '/api/backgrounds/$id/image'
-    | '/api/characters/$id/avatar'
-    | '/api/personas/$id/icon'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/settings"
+    | "/onboarding"
+    | "/setup"
+    | "/signin"
+    | "/api/chat-generate"
+    | "/characters/$id"
+    | "/characters/new"
+    | "/chat/$id"
+    | "/lorebooks/$id"
+    | "/lorebooks/new"
+    | "/settings/preferences"
+    | "/settings/presets"
+    | "/settings/profile"
+    | "/settings/providers"
+    | "/characters/"
+    | "/chat/"
+    | "/lorebooks/"
+    | "/settings/"
+    | "/api/auth/$"
+    | "/characters/$id_/edit"
+    | "/api/backgrounds/$id/image"
+    | "/api/characters/$id/avatar"
+    | "/api/personas/$id/icon";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
-  OnboardingRoute: typeof OnboardingRoute
-  SigninRoute: typeof SigninRoute
-  SignupRoute: typeof SignupRoute
-  AdminUsersRoute: typeof AdminUsersRoute
-  ApiChatGenerateRoute: typeof ApiChatGenerateRoute
-  CharactersIdRoute: typeof CharactersIdRoute
-  CharactersNewRoute: typeof CharactersNewRoute
-  ChatIdRoute: typeof ChatIdRoute
-  LorebooksIdRoute: typeof LorebooksIdRoute
-  LorebooksNewRoute: typeof LorebooksNewRoute
-  CharactersIndexRoute: typeof CharactersIndexRoute
-  ChatIndexRoute: typeof ChatIndexRoute
-  LorebooksIndexRoute: typeof LorebooksIndexRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  CharactersIdEditRoute: typeof CharactersIdEditRoute
-  ApiBackgroundsIdImageRoute: typeof ApiBackgroundsIdImageRoute
-  ApiCharactersIdAvatarRoute: typeof ApiCharactersIdAvatarRoute
-  ApiPersonasIdIconRoute: typeof ApiPersonasIdIconRoute
+  IndexRoute: typeof IndexRoute;
+  SettingsRouteRoute: typeof SettingsRouteRouteWithChildren;
+  OnboardingRoute: typeof OnboardingRoute;
+  SetupRoute: typeof SetupRoute;
+  SigninRoute: typeof SigninRoute;
+  ApiChatGenerateRoute: typeof ApiChatGenerateRoute;
+  CharactersIdRoute: typeof CharactersIdRoute;
+  CharactersNewRoute: typeof CharactersNewRoute;
+  ChatIdRoute: typeof ChatIdRoute;
+  LorebooksIdRoute: typeof LorebooksIdRoute;
+  LorebooksNewRoute: typeof LorebooksNewRoute;
+  CharactersIndexRoute: typeof CharactersIndexRoute;
+  ChatIndexRoute: typeof ChatIndexRoute;
+  LorebooksIndexRoute: typeof LorebooksIndexRoute;
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
+  CharactersIdEditRoute: typeof CharactersIdEditRoute;
+  ApiBackgroundsIdImageRoute: typeof ApiBackgroundsIdImageRoute;
+  ApiCharactersIdAvatarRoute: typeof ApiCharactersIdAvatarRoute;
+  ApiPersonasIdIconRoute: typeof ApiPersonasIdIconRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signin': {
-      id: '/signin'
-      path: '/signin'
-      fullPath: '/signin'
-      preLoaderRoute: typeof SigninRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/admin/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/chat-generate': {
-      id: '/api/chat-generate'
-      path: '/api/chat-generate'
-      fullPath: '/api/chat-generate'
-      preLoaderRoute: typeof ApiChatGenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/characters/': {
-      id: '/characters/'
-      path: '/characters'
-      fullPath: '/characters/'
-      preLoaderRoute: typeof CharactersIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/characters/$id': {
-      id: '/characters/$id'
-      path: '/characters/$id'
-      fullPath: '/characters/$id'
-      preLoaderRoute: typeof CharactersIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/characters/new': {
-      id: '/characters/new'
-      path: '/characters/new'
-      fullPath: '/characters/new'
-      preLoaderRoute: typeof CharactersNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat/': {
-      id: '/chat/'
-      path: '/chat'
-      fullPath: '/chat/'
-      preLoaderRoute: typeof ChatIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat/$id': {
-      id: '/chat/$id'
-      path: '/chat/$id'
-      fullPath: '/chat/$id'
-      preLoaderRoute: typeof ChatIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lorebooks/': {
-      id: '/lorebooks/'
-      path: '/lorebooks'
-      fullPath: '/lorebooks/'
-      preLoaderRoute: typeof LorebooksIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lorebooks/$id': {
-      id: '/lorebooks/$id'
-      path: '/lorebooks/$id'
-      fullPath: '/lorebooks/$id'
-      preLoaderRoute: typeof LorebooksIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lorebooks/new': {
-      id: '/lorebooks/new'
-      path: '/lorebooks/new'
-      fullPath: '/lorebooks/new'
-      preLoaderRoute: typeof LorebooksNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings/': {
-      id: '/settings/'
-      path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/demo': {
-      id: '/settings/demo'
-      path: '/demo'
-      fullPath: '/settings/demo'
-      preLoaderRoute: typeof SettingsDemoRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/preferences': {
-      id: '/settings/preferences'
-      path: '/preferences'
-      fullPath: '/settings/preferences'
-      preLoaderRoute: typeof SettingsPreferencesRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/presets': {
-      id: '/settings/presets'
-      path: '/presets'
-      fullPath: '/settings/presets'
-      preLoaderRoute: typeof SettingsPresetsRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/profile': {
-      id: '/settings/profile'
-      path: '/profile'
-      fullPath: '/settings/profile'
-      preLoaderRoute: typeof SettingsProfileRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/providers': {
-      id: '/settings/providers'
-      path: '/providers'
-      fullPath: '/settings/providers'
-      preLoaderRoute: typeof SettingsProvidersRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/characters/$id_/edit': {
-      id: '/characters/$id_/edit'
-      path: '/characters/$id/edit'
-      fullPath: '/characters/$id/edit'
-      preLoaderRoute: typeof CharactersIdEditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/backgrounds/$id/image': {
-      id: '/api/backgrounds/$id/image'
-      path: '/api/backgrounds/$id/image'
-      fullPath: '/api/backgrounds/$id/image'
-      preLoaderRoute: typeof ApiBackgroundsIdImageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/characters/$id/avatar': {
-      id: '/api/characters/$id/avatar'
-      path: '/api/characters/$id/avatar'
-      fullPath: '/api/characters/$id/avatar'
-      preLoaderRoute: typeof ApiCharactersIdAvatarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/personas/$id/icon': {
-      id: '/api/personas/$id/icon'
-      path: '/api/personas/$id/icon'
-      fullPath: '/api/personas/$id/icon'
-      preLoaderRoute: typeof ApiPersonasIdIconRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/signin": {
+      id: "/signin";
+      path: "/signin";
+      fullPath: "/signin";
+      preLoaderRoute: typeof SigninRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/setup": {
+      id: "/setup";
+      path: "/setup";
+      fullPath: "/setup";
+      preLoaderRoute: typeof SetupRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/onboarding": {
+      id: "/onboarding";
+      path: "/onboarding";
+      fullPath: "/onboarding";
+      preLoaderRoute: typeof OnboardingRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/settings": {
+      id: "/settings";
+      path: "/settings";
+      fullPath: "/settings";
+      preLoaderRoute: typeof SettingsRouteRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/settings/": {
+      id: "/settings/";
+      path: "/";
+      fullPath: "/settings/";
+      preLoaderRoute: typeof SettingsIndexRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
+    "/lorebooks/": {
+      id: "/lorebooks/";
+      path: "/lorebooks";
+      fullPath: "/lorebooks/";
+      preLoaderRoute: typeof LorebooksIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/chat/": {
+      id: "/chat/";
+      path: "/chat";
+      fullPath: "/chat/";
+      preLoaderRoute: typeof ChatIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/characters/": {
+      id: "/characters/";
+      path: "/characters";
+      fullPath: "/characters/";
+      preLoaderRoute: typeof CharactersIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/settings/providers": {
+      id: "/settings/providers";
+      path: "/providers";
+      fullPath: "/settings/providers";
+      preLoaderRoute: typeof SettingsProvidersRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
+    "/settings/profile": {
+      id: "/settings/profile";
+      path: "/profile";
+      fullPath: "/settings/profile";
+      preLoaderRoute: typeof SettingsProfileRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
+    "/settings/presets": {
+      id: "/settings/presets";
+      path: "/presets";
+      fullPath: "/settings/presets";
+      preLoaderRoute: typeof SettingsPresetsRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
+    "/settings/preferences": {
+      id: "/settings/preferences";
+      path: "/preferences";
+      fullPath: "/settings/preferences";
+      preLoaderRoute: typeof SettingsPreferencesRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
+    "/lorebooks/new": {
+      id: "/lorebooks/new";
+      path: "/lorebooks/new";
+      fullPath: "/lorebooks/new";
+      preLoaderRoute: typeof LorebooksNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/lorebooks/$id": {
+      id: "/lorebooks/$id";
+      path: "/lorebooks/$id";
+      fullPath: "/lorebooks/$id";
+      preLoaderRoute: typeof LorebooksIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/chat/$id": {
+      id: "/chat/$id";
+      path: "/chat/$id";
+      fullPath: "/chat/$id";
+      preLoaderRoute: typeof ChatIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/characters/new": {
+      id: "/characters/new";
+      path: "/characters/new";
+      fullPath: "/characters/new";
+      preLoaderRoute: typeof CharactersNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/characters/$id": {
+      id: "/characters/$id";
+      path: "/characters/$id";
+      fullPath: "/characters/$id";
+      preLoaderRoute: typeof CharactersIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/api/chat-generate": {
+      id: "/api/chat-generate";
+      path: "/api/chat-generate";
+      fullPath: "/api/chat-generate";
+      preLoaderRoute: typeof ApiChatGenerateRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/characters/$id_/edit": {
+      id: "/characters/$id_/edit";
+      path: "/characters/$id/edit";
+      fullPath: "/characters/$id/edit";
+      preLoaderRoute: typeof CharactersIdEditRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/api/auth/$": {
+      id: "/api/auth/$";
+      path: "/api/auth/$";
+      fullPath: "/api/auth/$";
+      preLoaderRoute: typeof ApiAuthSplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/api/personas/$id/icon": {
+      id: "/api/personas/$id/icon";
+      path: "/api/personas/$id/icon";
+      fullPath: "/api/personas/$id/icon";
+      preLoaderRoute: typeof ApiPersonasIdIconRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/api/characters/$id/avatar": {
+      id: "/api/characters/$id/avatar";
+      path: "/api/characters/$id/avatar";
+      fullPath: "/api/characters/$id/avatar";
+      preLoaderRoute: typeof ApiCharactersIdAvatarRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/api/backgrounds/$id/image": {
+      id: "/api/backgrounds/$id/image";
+      path: "/api/backgrounds/$id/image";
+      fullPath: "/api/backgrounds/$id/image";
+      preLoaderRoute: typeof ApiBackgroundsIdImageRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
 interface SettingsRouteRouteChildren {
-  SettingsDemoRoute: typeof SettingsDemoRoute
-  SettingsPreferencesRoute: typeof SettingsPreferencesRoute
-  SettingsPresetsRoute: typeof SettingsPresetsRoute
-  SettingsProfileRoute: typeof SettingsProfileRoute
-  SettingsProvidersRoute: typeof SettingsProvidersRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
+  SettingsPreferencesRoute: typeof SettingsPreferencesRoute;
+  SettingsPresetsRoute: typeof SettingsPresetsRoute;
+  SettingsProfileRoute: typeof SettingsProfileRoute;
+  SettingsProvidersRoute: typeof SettingsProvidersRoute;
+  SettingsIndexRoute: typeof SettingsIndexRoute;
 }
 
 const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
-  SettingsDemoRoute: SettingsDemoRoute,
   SettingsPreferencesRoute: SettingsPreferencesRoute,
   SettingsPresetsRoute: SettingsPresetsRoute,
   SettingsProfileRoute: SettingsProfileRoute,
   SettingsProvidersRoute: SettingsProvidersRoute,
   SettingsIndexRoute: SettingsIndexRoute,
-}
+};
 
 const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
   SettingsRouteRouteChildren,
-)
+);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  SetupRoute: SetupRoute,
   SigninRoute: SigninRoute,
-  SignupRoute: SignupRoute,
-  AdminUsersRoute: AdminUsersRoute,
   ApiChatGenerateRoute: ApiChatGenerateRoute,
   CharactersIdRoute: CharactersIdRoute,
   CharactersNewRoute: CharactersNewRoute,
@@ -590,16 +548,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBackgroundsIdImageRoute: ApiBackgroundsIdImageRoute,
   ApiCharactersIdAvatarRoute: ApiCharactersIdAvatarRoute,
   ApiPersonasIdIconRoute: ApiPersonasIdIconRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
+  ._addFileTypes<FileRouteTypes>();

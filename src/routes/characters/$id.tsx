@@ -24,7 +24,6 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { StatChip } from "@/components/common/StatChip";
 import { RelativeTime } from "@/components/common/RelativeTime";
 import { SkeletonForm } from "@/components/common/Skeletons";
-import { authClient } from "@/lib/auth-client";
 import type { CharacterDetail } from "@/db/repositories/characters";
 import { useCharacter, useDeleteCharacter, useUpdateCharacter } from "@/hooks/useCharacters";
 import { useCreateChat, useChatsByCharacter } from "@/hooks/useChats";
@@ -48,8 +47,6 @@ const SECTIONS = [
 export function CharacterDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
-  const isDemo = session?.user?.role !== "admin";
   const { data: character, isLoading, error } = useCharacter(id);
   const deleteMutation = useDeleteCharacter();
   const createChatMutation = useCreateChat();
@@ -183,19 +180,17 @@ export function CharacterDetailPage() {
             <MessageCircle className="size-4" data-icon="inline-start" />
             Start Chat
           </Button>
-          {!isDemo ? (
-            <RowActionsMenu
-              label="Character actions"
-              items={[
-                {
-                  label: "Edit",
-                  onSelect: () => void navigate({ to: "/characters/$id/edit", params: { id } }),
-                },
-                { label: "Rename", onSelect: () => setRenameOpen(true) },
-                { label: "Delete", destructive: true, onSelect: () => setDelOpen(true) },
-              ]}
-            />
-          ) : null}
+          <RowActionsMenu
+            label="Character actions"
+            items={[
+              {
+                label: "Edit",
+                onSelect: () => void navigate({ to: "/characters/$id/edit", params: { id } }),
+              },
+              { label: "Rename", onSelect: () => setRenameOpen(true) },
+              { label: "Delete", destructive: true, onSelect: () => setDelOpen(true) },
+            ]}
+          />
         </div>
 
         {/* Continue existing chats */}

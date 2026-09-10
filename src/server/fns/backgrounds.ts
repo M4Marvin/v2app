@@ -8,7 +8,7 @@ import {
   getBackground as repoGet,
   listBackgrounds as repoList,
 } from "@/db/repositories/backgrounds";
-import { getSession, isAdmin } from "@/server/session";
+import { getSession } from "@/server/session";
 import {
   GetBackgroundInput,
   DeleteBackgroundInput,
@@ -39,8 +39,7 @@ export const getBackground = createServerFn({ method: "GET" })
 export const uploadBackground = createServerFn({ method: "POST" })
   .validator(UploadBackgroundInput)
   .handler(async ({ data }): Promise<Background> => {
-    const { user } = await getSession();
-    if (!isAdmin(user)) throw new Error("Demo users cannot upload backgrounds.");
+    await getSession();
 
     await ensureUploadsDirs();
     const filename = `${randomUUID()}.png`;
@@ -56,8 +55,7 @@ export const uploadBackground = createServerFn({ method: "POST" })
 export const deleteBackground = createServerFn({ method: "POST" })
   .validator(DeleteBackgroundInput)
   .handler(async ({ data }): Promise<void> => {
-    const { user } = await getSession();
-    if (!isAdmin(user)) throw new Error("Demo users cannot delete backgrounds.");
+    await getSession();
 
     const bg = repoGet(data.id);
 

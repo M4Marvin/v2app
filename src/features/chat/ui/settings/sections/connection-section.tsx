@@ -21,11 +21,10 @@ import { useUserSettings, useUpdateUserSettings } from "@/hooks/useUserSettings"
 interface SectionProps {
   chatId: string;
   isStreaming: boolean;
-  isAdmin: boolean;
   onNavigate: (sectionId: string) => void;
 }
 
-export function ConnectionSection({ isStreaming, isAdmin, onNavigate }: SectionProps) {
+export function ConnectionSection({ isStreaming, onNavigate }: SectionProps) {
   const { data: settings } = useUserSettings();
   const { data: providers } = useAiProviders();
   const { data: presets } = usePresets();
@@ -171,7 +170,7 @@ export function ConnectionSection({ isStreaming, isAdmin, onNavigate }: SectionP
           <Select
             value={selectedModel}
             onValueChange={handleModelChange}
-            disabled={isStreaming || !selectedProviderId || !isAdmin}
+            disabled={isStreaming || !selectedProviderId}
           >
             <SelectTrigger id="cs-model" className="flex-1">
               <SelectValue placeholder="Select model" />
@@ -213,7 +212,7 @@ export function ConnectionSection({ isStreaming, isAdmin, onNavigate }: SectionP
           onChange={(e) => setModelInput(e.target.value)}
           onBlur={() => handleModelChange(modelInput)}
           placeholder="Or type model ID directly"
-          disabled={isStreaming || !isAdmin}
+          disabled={isStreaming}
         />
       </Field>
 

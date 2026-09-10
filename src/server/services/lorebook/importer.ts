@@ -5,10 +5,7 @@ import {
 } from "@/db/repositories/lorebooks";
 import { parseWorldFile } from "@/lib/lorebook/world-file";
 
-export async function importWorldFile(
-  content: string,
-  userId: string,
-): Promise<{
+export async function importWorldFile(content: string): Promise<{
   id: string;
   name: string;
   entriesInserted: number;
@@ -19,7 +16,6 @@ export async function importWorldFile(
   const id = randomUUID();
   repoCreate({
     id,
-    userId,
     name: parsed.name,
     description: parsed.description,
     config: parsed.config,
@@ -28,7 +24,7 @@ export async function importWorldFile(
   let entriesInserted = 0;
   for (const entry of parsed.entries) {
     try {
-      repoCreateEntry(userId, {
+      repoCreateEntry({
         id: randomUUID(),
         lorebookId: id,
         uid: entry.uid,
