@@ -66,7 +66,6 @@ function enrichChats(rows: ChatJoinRow[], db: DB): ChatWithCharacter[] {
 
 export type CreateChatInput = {
   id: string;
-  userId: string;
   characterId: string;
   title: string;
   characterDescription?: string;
@@ -79,7 +78,7 @@ export type MessagePatch = Partial<
   Pick<ChatMessageRow, "children" | "selectedChildLocalId" | "content" | "extra">
 >;
 
-export function listChats(userId: string, db: DB = defaultDb): ChatWithCharacter[] {
+export function listChats(db: DB = defaultDb): ChatWithCharacter[] {
   const rows = db
     .select({
       chat: chats,
@@ -88,14 +87,12 @@ export function listChats(userId: string, db: DB = defaultDb): ChatWithCharacter
     })
     .from(chats)
     .leftJoin(characters, eq(chats.characterId, characters.id))
-    .where(eq(chats.userId, userId))
     .orderBy(desc(chats.updatedAt))
     .all();
   return enrichChats(rows, db);
 }
 
 export function listChatsByCharacter(
-  userId: string,
   characterId: string,
   db: DB = defaultDb,
 ): ChatWithCharacter[] {
@@ -107,17 +104,17 @@ export function listChatsByCharacter(
     })
     .from(chats)
     .leftJoin(characters, eq(chats.characterId, characters.id))
-    .where(and(eq(chats.userId, userId), eq(chats.characterId, characterId)))
+    .where(eq(chats.characterId, characterId))
     .orderBy(desc(chats.updatedAt))
     .all();
   return enrichChats(rows, db);
 }
 
-export function getChat(userId: string, id: string, db: DB = defaultDb): Chat {
+export function getChat(id: string, db: DB = defaultDb): Chat {
   const row = db
     .select()
     .from(chats)
-    .where(and(eq(chats.id, id), eq(chats.userId, userId)))
+    .where(eq(chats.id, id))
     .get();
   if (!row) throw new Error("Chat not found");
   return row;
@@ -129,7 +126,6 @@ export function createChat(input: CreateChatInput, db: DB = defaultDb): Chat {
     .insert(chats)
     .values({
       id: input.id,
-      userId: input.userId,
       characterId: input.characterId,
       title: input.title,
       characterDescription: input.characterDescription ?? "",
@@ -145,21 +141,18 @@ export function createChat(input: CreateChatInput, db: DB = defaultDb): Chat {
   return row;
 }
 
-export function deleteChat(userId: string, id: string, db: DB = defaultDb): void {
-  // Verify ownership before deleting anything
-  getChat(userId, id, db);
+export function deleteChat(id: string, db: DB = defaultDb): void {
+  // Verify the chat exists before deleting anything
+  getChat(id, db);
   // Manually delete messages first since FK enforcement is off in dev.db
   db.delete(chatMessages).where(eq(chatMessages.chatId, id)).run();
-  const result = db
-    .delete(chats)
-    .where(and(eq(chats.id, id), eq(chats.userId, userId)))
-    .run();
+  const result = db.delete(chats).where(eq(chats.id, id)).run();
   if (result.changes === 0) throw new Error("Chat not found");
 }
 
-export function listMessages(userId: string, chatId: string, db: DB = defaultDb): ChatMessageRow[] {
-  // Verify chat ownership first
-  getChat(userId, chatId, db);
+export function listMessages(chatId: string, db: DB = defaultDb): ChatMessageRow[] {
+  // Verify the chat exists first
+  getChat(chatId, db);
   return db
     .select()
     .from(chatMessages)
@@ -169,13 +162,12 @@ export function listMessages(userId: string, chatId: string, db: DB = defaultDb)
 }
 
 export function getMessage(
-  userId: string,
   chatId: string,
   localId: number,
   db: DB = defaultDb,
 ): ChatMessageRow | undefined {
-  // Verify chat ownership first
-  getChat(userId, chatId, db);
+  // Verify the chat exists first
+  getChat(chatId, db);
   return db
     .select()
     .from(chatMessages)
@@ -188,24 +180,22 @@ function touchChat(chatId: string, db: DB = defaultDb): void {
 }
 
 export function insertMessage(
-  userId: string,
   chatId: string,
   msg: NewChatMessageRow,
   db: DB = defaultDb,
 ): void {
-  getChat(userId, chatId, db);
+  getChat(chatId, db);
   db.insert(chatMessages).values(msg).run();
   touchChat(chatId, db);
 }
 
 export function updateMessage(
-  userId: string,
   chatId: string,
   localId: number,
   patch: MessagePatch,
   db: DB = defaultDb,
 ): void {
-  getChat(userId, chatId, db);
+  getChat(chatId, db);
   db.update(chatMessages)
     .set(patch)
     .where(and(eq(chatMessages.chatId, chatId), eq(chatMessages.localId, localId)))
@@ -214,7 +204,6 @@ export function updateMessage(
 }
 
 export function updateChat(
-  userId: string,
   id: string,
   patch: Partial<
     Pick<
@@ -229,7 +218,7 @@ export function updateChat(
   >,
   db: DB = defaultDb,
 ): Chat {
-  const existing = getChat(userId, id, db);
+  const existing = getChat(id, db);
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (patch.characterDescription !== undefined)
     updates.characterDescription = patch.characterDescription;
@@ -243,7 +232,7 @@ export function updateChat(
   const row = db
     .update(chats)
     .set(updates)
-    .where(and(eq(chats.id, existing.id), eq(chats.userId, userId)))
+    .where(eq(chats.id, existing.id))
     .returning()
     .get();
   if (!row) throw new Error("Chat not found");
@@ -251,12 +240,11 @@ export function updateChat(
 }
 
 export function deleteMessages(
-  userId: string,
   chatId: string,
   localIds: number[],
   db: DB = defaultDb,
 ): void {
-  getChat(userId, chatId, db);
+  getChat(chatId, db);
   db.delete(chatMessages)
     .where(and(eq(chatMessages.chatId, chatId), inArray(chatMessages.localId, localIds)))
     .run();

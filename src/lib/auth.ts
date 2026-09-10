@@ -2,12 +2,9 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { username } from "better-auth/plugins/username";
-import { admin } from "better-auth/plugins/admin";
 import { db } from "@/db";
 import { account, session, user, verification } from "@/db/schema";
 import { seedSampleData } from "@/server/seed";
-import { ensureGlobalAiProviderExists } from "@/db/repositories/aiProviders";
-import { FALLBACK_GLOBAL_PROVIDER } from "@/server/bootstrap";
 
 const appUrl = process.env.APP_URL || "http://localhost:3000";
 const extraOrigins = (process.env.TRUSTED_ORIGINS || "")
@@ -29,13 +26,17 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async () => {
+          const existing = db.select({ id: user.id }).from(user).limit(1).get();
+          if (existing) {
+            throw new Error("This instance already has an account");
+          }
+        },
         after: async (userData) => {
-          const role = ((userData as Record<string, unknown>).role as string) ?? "user";
-          await ensureGlobalAiProviderExists(FALLBACK_GLOBAL_PROVIDER);
-          await seedSampleData(userData.id, role);
+          await seedSampleData(userData.id);
         },
       },
     },
   },
-  plugins: [username(), admin({ defaultRole: "user" }), tanstackStartCookies()],
+  plugins: [username(), tanstackStartCookies()],
 });
