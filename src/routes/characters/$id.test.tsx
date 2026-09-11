@@ -141,4 +141,32 @@ describe("CharacterDetailPage", () => {
     expect(tagLink?.getAttribute("data-to")).toBe("/characters");
     expect(tagLink?.getAttribute("data-search")).toBe(JSON.stringify({ tags: "test" }));
   });
+
+  it("renders the visible Creator Notes section when creator notes are present", () => {
+    mockUseCharacter.mockReturnValue({
+      data: {
+        ...zephyr,
+        data: makeCharacterData({ name: "Zephyr", creator_notes: "Some creator notes." }),
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<CharacterDetailPage />);
+
+    expect(screen.getByRole("heading", { name: "Creator Notes" })).toBeDefined();
+  });
+
+  it("omits the Creator Notes section when creator notes are empty", () => {
+    mockUseCharacter.mockReturnValue({
+      data: {
+        ...zephyr,
+        data: makeCharacterData({ name: "Zephyr", creator_notes: "" }),
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<CharacterDetailPage />);
+
+    expect(screen.queryByRole("heading", { name: "Creator Notes" })).toBeNull();
+  });
 });
