@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Copy, MessageCircle, MessagesSquare, Calendar, User } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MarkdownContent } from "@/components/MarkdownContent";
 import { EmbeddedLorebookPanel } from "@/components/character/EmbeddedLorebookPanel";
+import { MarkdownContent } from "@/components/MarkdownContent";
+import { CharacterPoster } from "@/components/character/character-poster";
+import { CharacterDefinition } from "@/components/character/character-definition";
+import { MoreByCreator } from "@/components/character/more-by-creator";
 import { PageHeader } from "@/components/common/PageHeader";
-import { SectionNav } from "@/components/common/SectionNav";
 import { ErrorBanner } from "@/components/common/ErrorBanner";
 import { RowActionsMenu } from "@/components/common/RowActionsMenu";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import { StatChip } from "@/components/common/StatChip";
 import { RelativeTime } from "@/components/common/RelativeTime";
 import { SkeletonForm } from "@/components/common/Skeletons";
 import type { CharacterDetail } from "@/db/repositories/characters";
@@ -32,17 +33,6 @@ import { characterDeleteDescription } from "./delete-stats";
 export const Route = createFileRoute("/characters/$id")({
   component: CharacterDetailPage,
 });
-
-const SECTIONS = [
-  { id: "description", label: "Description" },
-  { id: "personality", label: "Personality" },
-  { id: "scenario", label: "Scenario" },
-  { id: "greetings", label: "Greetings" },
-  { id: "example-messages", label: "Example Messages" },
-  { id: "prompts", label: "Prompts" },
-  { id: "lorebook", label: "Lorebook" },
-  { id: "metadata", label: "Metadata" },
-];
 
 export function CharacterDetailPage() {
   const { id } = Route.useParams();
@@ -92,265 +82,161 @@ export function CharacterDetailPage() {
   }
 
   const data = character.data;
-  const sectionsWithEmpty = SECTIONS.map((s) => ({
-    ...s,
-    empty: isSectionEmpty(s.id, data),
-  }));
+  const creator = character.creator || data.creator;
+  const avatarUrl = character.imagePath ? `/api/characters/${character.id}/avatar` : null;
 
   return (
-    <main className="mx-auto max-w-[1200px] px-4 py-8">
-      <PageHeader backTo="/characters" />
-
-      {/* Hero */}
-      <div className="mb-8 space-y-6">
-        <div className="flex flex-col sm:flex-row gap-6">
-          <div className="shrink-0">
-            {character.imagePath ? (
-              <img
-                src={`/api/characters/${character.id}/avatar`}
-                alt={character.name}
-                className="w-40 sm:w-40 aspect-[3/4] rounded-xl object-cover border shadow-lg"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="w-40 aspect-[3/4] rounded-xl bg-muted border flex items-center justify-center">
-                <User className="size-12 text-muted-foreground/40" />
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col min-w-0 justify-center gap-2">
-            <h1 className="text-display">{character.name}</h1>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-2">
-              {data.creator ? (
-                <span className="flex items-center gap-1">
-                  <User className="size-3.5" />
-                  {data.creator}
-                </span>
-              ) : null}
-              <Badge variant="secondary" className="text-xs font-normal">
-                {character.spec}
-              </Badge>
-              <Badge variant="outline" className="text-xs font-normal">
-                v{character.specVersion}
-              </Badge>
-              {data.character_version ? (
-                <Badge variant="outline" className="text-xs font-normal">
-                  card v{data.character_version}
-                </Badge>
-              ) : null}
-            </div>
-            {data.tags.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {data.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-[11px] font-normal">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-3">
-              <StatChip
-                icon={MessagesSquare}
-                value={character.chatCount}
-                label={character.chatCount === 1 ? "chat" : "chats"}
-              />
-              <StatChip
-                icon={MessageCircle}
-                value={character.userMessageCount}
-                label={character.userMessageCount === 1 ? "turn" : "turns"}
-              />
-              <StatChip
-                icon={Calendar}
-                value={character.updatedAt.toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-                label="updated"
-              />
-            </div>
-          </div>
+    <main className="relative isolate mx-auto flex w-full max-w-[1200px] flex-col px-4 py-6 lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
+      {avatarUrl ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[360px] overflow-hidden"
+        >
+          <img
+            src={avatarUrl}
+            alt=""
+            width={1200}
+            height={360}
+            className="h-full w-full scale-110 object-cover opacity-20 blur-3xl"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.nextElementSibling?.classList.remove("hidden");
+            }}
+          />
+          <div className="hidden h-full w-full bg-raised" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
         </div>
+      ) : null}
 
-        {/* Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={handleStartChat} disabled={createChatMutation.isPending}>
-            <MessageCircle className="size-4" data-icon="inline-start" />
-            Start Chat
-          </Button>
-          <RowActionsMenu
-            label="Character actions"
-            items={[
-              {
-                label: "Edit",
-                onSelect: () => void navigate({ to: "/characters/$id/edit", params: { id } }),
-              },
-              { label: "Rename", onSelect: () => setRenameOpen(true) },
-              { label: "Delete", destructive: true, onSelect: () => setDelOpen(true) },
-            ]}
+      <div className="lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(280px,340px)_1fr] lg:items-stretch lg:gap-8">
+        <div className="lg:min-h-0 lg:overflow-hidden">
+          <CharacterPoster
+            character={character}
+            chats={characterChats ?? []}
+            onStartChat={handleStartChat}
+            starting={createChatMutation.isPending}
           />
         </div>
 
-        {/* Continue existing chats */}
-        {characterChats && characterChats.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="text-2 text-sm font-medium">Continue chat</h2>
-            <div className="space-y-1">
-              {characterChats.slice(0, 5).map((chat) => (
-                <Link
-                  key={chat.id}
-                  to="/chat/$id"
-                  params={{ id: chat.id }}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 -mx-3 hover:bg-surface transition-colors no-underline"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-headline truncate">{chat.title}</p>
-                    {chat.lastMessagePreview ? (
-                      <p className="text-3 text-sm line-clamp-1">{chat.lastMessagePreview}</p>
-                    ) : (
-                      <p className="text-3 text-sm italic">No messages yet</p>
-                    )}
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className="text-3 text-xs tabular-nums">
-                      <RelativeTime date={chat.updatedAt} />
-                    </span>
-                    {chat.userMessageCount > 0 && (
-                      <p className="text-3 text-xs tabular-nums">{chat.userMessageCount} turns</p>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="min-w-0 lg:min-h-0 lg:overflow-y-auto lg:scrollbar-thin lg:scroll-fade-b lg:pr-1">
+          <Button asChild variant="ghost" size="icon" className="-ml-2" aria-label="Back">
+            <Link to="/characters">
+              <ArrowLeft className="size-4" />
+            </Link>
+          </Button>
 
-        {/* Mobile sticky */}
-        <div className="fixed bottom-16 left-0 right-0 z-30 border-t bg-popover/95 px-4 py-3 backdrop-blur-sm md:hidden">
-          {characterChats && characterChats.length > 0 ? (
-            <div className="flex gap-2">
-              <Button asChild className="flex-1">
-                <Link to="/chat/$id" params={{ id: characterChats[0].id }}>
-                  <MessageCircle className="size-4" data-icon="inline-start" />
-                  Continue
-                </Link>
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleStartChat}
-                disabled={createChatMutation.isPending}
-              >
-                New
-              </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={handleStartChat}
-              disabled={createChatMutation.isPending}
-              className="w-full"
-            >
-              <MessageCircle className="size-4" data-icon="inline-start" />
-              Start Chat
-            </Button>
-          )}
+          <div className="space-y-10">
+            <header className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-2">
+                  <h1 className="text-display">{character.name}</h1>
+                  <p className="text-2 text-sm">
+                    {creator ? <>@{creator} · </> : null}
+                    Updated <RelativeTime date={character.updatedAt} /> · Created{" "}
+                    {character.createdAt.toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  {character.tagline ? (
+                    <p className="text-title text-2">{character.tagline}</p>
+                  ) : null}
+                </div>
+                <div className="shrink-0">
+                  <RowActionsMenu
+                    label="Character actions"
+                    items={[
+                      {
+                        label: "Edit",
+                        onSelect: () =>
+                          void navigate({ to: "/characters/$id/edit", params: { id } }),
+                      },
+                      { label: "Rename", onSelect: () => setRenameOpen(true) },
+                      { label: "Delete", destructive: true, onSelect: () => setDelOpen(true) },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="text-xs font-normal">
+                  {character.spec}
+                </Badge>
+                <Badge variant="outline" className="text-xs font-normal">
+                  v{character.specVersion}
+                </Badge>
+                {data.character_version ? (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    card v{data.character_version}
+                  </Badge>
+                ) : null}
+                {data.tags.map((tag) => (
+                  <Link key={tag} to="/characters" search={{ tags: tag }} className="focus-ring">
+                    <Badge variant="secondary" className="text-[11px] font-normal">
+                      {tag}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            </header>
+
+            {data.creator_notes ? (
+              <section className="space-y-3">
+                <h2 className="text-title">Creator Notes</h2>
+                <MarkdownContent content={data.creator_notes} />
+              </section>
+            ) : null}
+
+            <CharacterDefinition data={data} />
+
+            <section className="space-y-3">
+              <h2 className="text-title">Lorebook</h2>
+              {data.character_book ? (
+                <EmbeddedLorebookPanel book={data.character_book} />
+              ) : (
+                <p className="text-3 text-sm italic">No embedded lorebook.</p>
+              )}
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-title">Details</h2>
+              <DetailsGrid character={character} />
+            </section>
+
+            {creator ? <MoreByCreator creator={creator} currentId={character.id} /> : null}
+          </div>
         </div>
       </div>
 
-      {/* Content: SectionNav + scroll sections */}
-      <div className="lg:grid lg:grid-cols-[200px_1fr] lg:gap-10">
-        <SectionNav sections={sectionsWithEmpty} />
-        <div className="max-w-3xl space-y-12 pt-2">
-          <ContentSection id="description" title="Description">
-            {data.description ? (
-              <MarkdownContent content={data.description} />
-            ) : (
-              <EmptySection text="No description defined." />
-            )}
-            {data.creator_notes ? (
-              <div className="mt-6">
-                <h4 className="text-headline mb-3">Creator Notes</h4>
-                <MarkdownContent content={data.creator_notes} />
-              </div>
-            ) : null}
-            {data.extensions.depth_prompt ? (
-              <div className="mt-6">
-                <h4 className="text-headline mb-3">Depth Prompt</h4>
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="secondary">role: {data.extensions.depth_prompt.role}</Badge>
-                  <Badge variant="outline">depth: {data.extensions.depth_prompt.depth}</Badge>
-                </div>
-                <MarkdownContent content={data.extensions.depth_prompt.prompt} />
-              </div>
-            ) : null}
-          </ContentSection>
-          <ContentSection id="personality" title="Personality">
-            {data.personality ? (
-              <MarkdownContent content={data.personality} />
-            ) : (
-              <EmptySection text="No personality defined." />
-            )}
-          </ContentSection>
-          <ContentSection id="scenario" title="Scenario">
-            {data.scenario ? (
-              <MarkdownContent content={data.scenario} />
-            ) : (
-              <EmptySection text="No scenario defined." />
-            )}
-          </ContentSection>
-          <ContentSection id="greetings" title="Greetings">
-            {data.first_mes ? (
-              <div className="space-y-4">
-                <div className="bg-card border rounded-lg p-4">
-                  <MarkdownContent content={data.first_mes} />
-                </div>
-                {data.alternate_greetings.length > 0 ? (
-                  <AlternateGreetings greetings={data.alternate_greetings} />
-                ) : null}
-              </div>
-            ) : (
-              <EmptySection text="No greetings defined." />
-            )}
-          </ContentSection>
-          <ContentSection id="example-messages" title="Example Messages">
-            {data.mes_example ? (
-              <MarkdownContent content={data.mes_example} />
-            ) : (
-              <EmptySection text="No example messages defined." />
-            )}
-          </ContentSection>
-          <ContentSection id="prompts" title="Prompts">
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-headline mb-3">System Prompt</h4>
-                {data.system_prompt ? (
-                  <MarkdownContent content={data.system_prompt} />
-                ) : (
-                  <EmptySection text="No system prompt defined." />
-                )}
-              </div>
-              <div>
-                <h4 className="text-headline mb-3">Post-History Instructions</h4>
-                {data.post_history_instructions ? (
-                  <MarkdownContent content={data.post_history_instructions} />
-                ) : (
-                  <EmptySection text="No post-history instructions defined." />
-                )}
-              </div>
-            </div>
-          </ContentSection>
-          <ContentSection id="lorebook" title="Lorebook">
-            {data.character_book ? (
-              <EmbeddedLorebookPanel book={data.character_book} />
-            ) : (
-              <EmptySection text="No embedded lorebook." />
-            )}
-          </ContentSection>
-          <ContentSection id="metadata" title="Metadata">
-            <MetadataGrid character={character} />
-          </ContentSection>
-        </div>
+      {/* Mobile sticky */}
+      <div className="fixed bottom-16 left-0 right-0 z-30 border-t bg-popover/95 px-4 py-3 backdrop-blur-sm md:hidden">
+        {characterChats && characterChats.length > 0 ? (
+          <div className="flex gap-2">
+            <Button asChild className="flex-1">
+              <Link to="/chat/$id" params={{ id: characterChats[0].id }}>
+                <MessageCircle className="size-4" data-icon="inline-start" />
+                Continue
+              </Link>
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleStartChat}
+              disabled={createChatMutation.isPending}
+            >
+              New
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={handleStartChat}
+            disabled={createChatMutation.isPending}
+            className="w-full"
+          >
+            <MessageCircle className="size-4" data-icon="inline-start" />
+            Start Chat
+          </Button>
+        )}
       </div>
 
       <RenameDialog character={character} open={renameOpen} onClose={() => setRenameOpen(false)} />
@@ -380,86 +266,10 @@ export function CharacterDetailPage() {
   );
 }
 
-function ContentSection({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-24">
-      <h2 className="text-title mb-4">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function EmptySection({ text }: { text: string }) {
-  return <p className="text-3 text-sm italic">{text}</p>;
-}
-
-function AlternateGreetings({ greetings }: { greetings: string[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const isMany = greetings.length > 2;
-  const shown = expanded || !isMany ? greetings : greetings.slice(0, 2);
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-headline">Alternate Greetings ({greetings.length})</h4>
-      </div>
-      {shown.map((greeting, i) => (
-        <div key={i} className="bg-card border rounded-lg p-4 group/copy relative">
-          <Badge variant="secondary" className="text-[11px] font-normal mb-2">
-            #{i + 1}
-          </Badge>
-          <div className="absolute top-3 right-3 opacity-0 group-hover/copy:opacity-100 transition-opacity">
-            <CopyButton text={greeting} />
-          </div>
-          <MarkdownContent content={greeting} />
-        </div>
-      ))}
-      {isMany && !expanded ? (
-        <Button variant="ghost" size="sm" onClick={() => setExpanded(true)}>
-          Show {greetings.length - 2} more
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="size-8"
-      onClick={handleCopy}
-      aria-label={copied ? "Copied" : "Copy to clipboard"}
-    >
-      {copied ? (
-        <span className="text-success text-[10px] font-medium">✓</span>
-      ) : (
-        <Copy className="size-3.5" />
-      )}
-    </Button>
-  );
-}
-
-function MetadataGrid({ character }: { character: CharacterDetail }) {
+function DetailsGrid({ character }: { character: CharacterDetail }) {
   const data = character.data;
   const rows: { label: string; value: string }[] = [
     { label: "Spec", value: `${character.spec} v${character.specVersion}` },
-    ...(data.creator ? [{ label: "Creator", value: data.creator }] : []),
     ...(data.character_version ? [{ label: "Card Version", value: data.character_version }] : []),
     ...(data.extensions.world ? [{ label: "World", value: data.extensions.world }] : []),
     ...(data.extensions.talkativeness !== undefined
@@ -481,47 +291,17 @@ function MetadataGrid({ character }: { character: CharacterDetail }) {
         day: "numeric",
       }),
     },
-    ...(data.tags.length > 0
-      ? [{ label: "Tags", value: data.tags.map((t) => `#${t}`).join(", ") }]
-      : []),
   ];
   return (
-    <div className="rounded-lg border divide-y">
-      {rows.length === 0 ? (
-        <p className="px-4 py-2.5 text-sm text-3">No metadata available.</p>
-      ) : (
-        rows.map((row) => (
-          <div key={row.label} className="flex items-baseline gap-3 px-4 py-2.5 text-sm">
-            <span className="text-2 shrink-0 w-28">{row.label}</span>
-            <span className="text-1 break-all">{row.value}</span>
-          </div>
-        ))
-      )}
+    <div className="rounded-xl border border-subtle divide-y">
+      {rows.map((row) => (
+        <div key={row.label} className="flex items-baseline gap-3 px-4 py-2.5 text-sm">
+          <span className="w-28 shrink-0 text-2">{row.label}</span>
+          <span className="text-1 break-all">{row.value}</span>
+        </div>
+      ))}
     </div>
   );
-}
-
-function isSectionEmpty(id: string, data: CharacterDetail["data"]): boolean {
-  switch (id) {
-    case "description":
-      return !data.description && !data.creator_notes && !data.extensions.depth_prompt;
-    case "personality":
-      return !data.personality;
-    case "scenario":
-      return !data.scenario;
-    case "greetings":
-      return !data.first_mes && data.alternate_greetings.length === 0;
-    case "example-messages":
-      return !data.mes_example;
-    case "prompts":
-      return !data.system_prompt && !data.post_history_instructions;
-    case "lorebook":
-      return !data.character_book;
-    case "metadata":
-      return false;
-    default:
-      return false;
-  }
 }
 
 function RenameDialog({

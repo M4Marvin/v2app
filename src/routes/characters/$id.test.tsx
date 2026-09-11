@@ -17,6 +17,10 @@ vi.mock("@/hooks/useCharacters", () => ({
   useCharacter: mockUseCharacter,
   useDeleteCharacter: mockUseDeleteCharacter,
   useUpdateCharacter: () => ({ mutate: vi.fn() }),
+  useCharacterSearch: () => ({
+    data: { pages: [{ items: [] }], pageParams: [0] },
+    isLoading: false,
+  }),
 }));
 
 vi.mock("@/hooks/useChats", () => ({
@@ -31,7 +35,22 @@ vi.mock("@tanstack/react-router", () => ({
     useParams: () => ({ id: "char-1" }),
   }),
   useNavigate: () => vi.fn(),
-  Link: ({ children }: { children?: ReactNode }) => <a>{children}</a>,
+  // Forward `to`/`search` onto data-* so tests can assert nav targets (the real
+  // Link consumes them; a bare <a> drops them). Router-only props are stripped
+  // so they don't leak onto the DOM node as invalid attributes.
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children?: ReactNode;
+    to?: string;
+    search?: Record<string, unknown>;
+  }) => (
+    <a data-to={to} data-search={search ? JSON.stringify(search) : undefined}>
+      {children}
+    </a>
+  ),
 }));
 
 // The page renders these for the fixture's non-empty description/personality/
@@ -66,23 +85,32 @@ const zephyr: CharacterDetail = {
   messageCount: 5,
 };
 
-describe("CharacterDetailPage delete confirmation", () => {
+describe("CharacterDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseCharacter.mockReturnValue({ data: zephyr, isLoading: false, error: null });
     mockUseDeleteCharacter.mockReturnValue({ isPending: false, mutate: vi.fn() });
-    // SectionNav (rendered by the page) creates an IntersectionObserver in a
-    // useEffect — jsdom does not implement it.
+    // ClampedText measures with a ResizeObserver; embla reads matchMedia.
     vi.stubGlobal(
-      "IntersectionObserver",
+      "ResizeObserver",
       class {
         observe() {}
         unobserve() {}
         disconnect() {}
-        takeRecords() {
-          return [];
-        }
       },
+    );
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockReturnValue({
+        matches: false,
+        media: "",
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
     );
   });
 
@@ -100,5 +128,17 @@ describe("CharacterDetailPage delete confirmation", () => {
 
     expect(screen.getByText(/2 chats/)).toBeTruthy();
     expect(screen.getByText(/5 messages/)).toBeTruthy();
+  });
+
+  it("renders the redesigned layout: name heading, chat CTA, and tag link", () => {
+    render(<CharacterDetailPage />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Zephyr" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Chat with Zephyr/ })).toBeTruthy();
+
+    const tagLink = screen.getByText("test").closest("a");
+    expect(tagLink).toBeTruthy();
+    expect(tagLink?.getAttribute("data-to")).toBe("/characters");
+    expect(tagLink?.getAttribute("data-search")).toBe(JSON.stringify({ tags: "test" }));
   });
 });
