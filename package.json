@@ -1,6 +1,7 @@
 {
   "name": "charon",
   "private": true,
+  "packageManager": "pnpm@12.3.4",
   "type": "module",
   "imports": {
     "#/*": "./src/*"
@@ -126,12 +127,5 @@
       "lightningcss",
       "better-sqlite3"
     ]
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.13.0",
-      "onFail": "warn"
-    }
   }
 }

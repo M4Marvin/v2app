@@ -7,9 +7,9 @@ cd "$(git rev-parse --show-toplevel)"
 fail() { printf '\033[1;31m✗ %s\033[0m\n' "$*"; exit 1; }
 log()  { printf '\033[1;36m▶ %s\033[0m\n' "$*"; }
 
-# 1. Format check — ignore generated files and the pnpm version WARN (stdout noise).
+# 1. Format check — generated files are excluded via .oxfmtrc.json ignorePatterns.
 log "oxfmt --check src"
-unformatted=$(pnpm exec oxfmt --list-different src 2>/dev/null | grep -v 'routeTree.gen.ts' | grep -v '\[WARN\]' || true)
+unformatted=$(pnpm exec oxfmt --list-different src 2>/dev/null || true)
 if [ -n "$unformatted" ]; then
   printf '%s\n' "$unformatted"
   fail "formatting drift — run: pnpm format"

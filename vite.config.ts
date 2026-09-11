@@ -40,9 +40,11 @@ const config = defineConfig({
     nitro(),
     tanstackStart({
       router: {
-        // Colocated route tests (e.g. characters/new.test.tsx) would otherwise be
+        // Colocated route tests (e.g. characters/new.test.tsx) and non-route
+        // helper modules (e.g. characters/detail-helpers.ts) would otherwise be
         // picked up as route candidates and warned about on every build.
-        routeFileIgnorePattern: '\\.test\\.',
+        routeFileIgnorePattern:
+          '\\.test\\.|^delete-stats\\.ts$|^detail-helpers\\.ts$',
       },
     }),
     viteReact(),
